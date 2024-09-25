@@ -36,6 +36,12 @@ public partial class MainWindowViewModel : ViewModelBase
         _twitchService = twitchService;
         _twitchService.ConnectionStatus += TwitchServiceConnectionStatus;
         _twitchService.MessageLogged += TwitchServiceMessageLogged;
+        
+        if (!string.IsNullOrEmpty(Username))
+        {
+            _twitchService.ConnectAsync(Username);
+        }
+
         ConfigService.Settings.RefreshSubscriptions();
         FilteredSoundCommands = new FilteredObservableCollection<SoundCommand>(
             ConfigService.Settings.SoundCommands,
