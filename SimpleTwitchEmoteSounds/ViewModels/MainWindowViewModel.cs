@@ -13,11 +13,12 @@ using MiniTwitch.Irc.Models;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using Serilog;
-using SimpleTwitchEmoteSounds.Common;
 using SimpleTwitchEmoteSounds.Extensions;
 using SimpleTwitchEmoteSounds.Models;
 using SimpleTwitchEmoteSounds.Services;
 using SimpleTwitchEmoteSounds.Views;
+
+// ReSharper disable UnusedParameterInPartialMethod
 
 namespace SimpleTwitchEmoteSounds.ViewModels;
 
@@ -141,7 +142,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     partial void OnSearchTextChanged(string value)
     {
-        Debouncer.Debounce("refresh", () => FilteredSoundCommands.Refresh(), 300);
+        FilteredSoundCommands.Refresh();
     }
 
     [RelayCommand]
@@ -178,7 +179,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             WindowStartupLocation = WindowStartupLocation.CenterOwner
         };
-        var result = await dialog.ShowDialog<NewSoundCommandResult>(mainWindow);
+        var result = await dialog.ShowDialog<NewSoundCommandResult?>(mainWindow);
 
         if (result is null)
         {
@@ -212,7 +213,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 {
                     FileName = f.Name,
                     FilePath = f.Path.LocalPath,
-                    Percentage = (100 / files.Count).ToString()
+                    Percentage = "1"
                 });
             }
 
@@ -231,23 +232,25 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var files = await topLevel?.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Select Audio File",
-            AllowMultiple = false,
+            Title = "Select Audio Files",
+            AllowMultiple = true,
             FileTypeFilter =
             [
                 new FilePickerFileType("Audio Files") { Patterns = ["*.mp3", "*.wav", "*.ogg"] }
             ]
         })!;
 
-        if (files is { Count: 1 })
+        if (files is { Count: >= 1 })
         {
-            var f = files[0];
-            soundCommand.SoundFiles.Add(new SoundFile
+            foreach (var f in files)
             {
-                FileName = f.Name,
-                FilePath = f.Path.LocalPath,
-                Percentage = (100 / (soundCommand.SoundFiles.Count + 1)).ToString()
-            });
+                soundCommand.SoundFiles.Add(new SoundFile
+                {
+                    FileName = f.Name,
+                    FilePath = f.Path.LocalPath,
+                    Percentage = "1"
+                });
+            }
         }
     }
 
@@ -309,7 +312,8 @@ public partial class MainWindowViewModel : ViewModelBase
             title,
             message,
             ButtonEnum.YesNo,
-            Icon.Question);
+            Icon.Question
+        );
 
         return await messageBoxStandardWindow.ShowAsync();
     }
