@@ -41,17 +41,17 @@ public partial class MainWindowViewModel : ViewModelBase
         _twitchService.ConnectionStatus += TwitchServiceConnectionStatus;
         _twitchService.MessageLogged += TwitchServiceMessageLogged;
 
-        if (!string.IsNullOrEmpty(Username))
-        {
-            _twitchService.ConnectAsync(Username);
-        }
-
         ConfigService.Settings.RefreshSubscriptions();
         FilteredSoundCommands = new FilteredObservableCollection<SoundCommand>(
             ConfigService.Settings.SoundCommands,
             v => string.IsNullOrEmpty(SearchText) ||
                  v.DisplayName.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
         );
+
+        if (!string.IsNullOrEmpty(Username))
+        {
+            _ = _twitchService.ConnectAsync(Username);
+        }
     }
 
     partial void OnUsernameChanged(string value)
@@ -118,6 +118,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void TwitchServiceConnectionStatus(TwitchStatus obj)
     {
+        Log.Information($"Status: {obj.ToString()}");
         switch (obj)
         {
             case TwitchStatus.Disconnected:
@@ -131,8 +132,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 ConnectButtonColor = "#5dc264";
                 break;
             case TwitchStatus.Reconnecting:
-                IsConnected = true;
-                ConnectButtonText = "Reconnected";
+                IsConnected = false;
+                ConnectButtonText = "Reconnecting";
                 ConnectButtonColor = "#ffae43";
                 break;
             default:
@@ -146,15 +147,15 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void Connect()
+    private async Task Connect()
     {
         if (IsConnected)
         {
-            _twitchService.DisconnectAsync();
+            await _twitchService.DisconnectAsync();
         }
         else
         {
-            _twitchService.ConnectAsync(Username);
+            await _twitchService.ConnectAsync(Username);
         }
     }
 

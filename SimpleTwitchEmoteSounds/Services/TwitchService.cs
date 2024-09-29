@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MiniTwitch.Irc;
+using MiniTwitch.Irc.Interfaces;
 using MiniTwitch.Irc.Models;
 using Serilog;
 
@@ -12,6 +13,7 @@ public class TwitchService
     private readonly IrcClient _client;
     public event Action<TwitchStatus>? ConnectionStatus;
     public event Action<Privmsg>? MessageLogged;
+    private bool _isFirstConnect = true;
     private bool _connected;
 
     public TwitchService()
@@ -23,9 +25,10 @@ public class TwitchService
         {
             options.Anonymous = true;
             options.Logger = microsoftLogger;
-            options.ReconnectionDelay = TimeSpan.FromSeconds(10);
+            options.ReconnectionDelay = TimeSpan.FromSeconds(5);
         });
         _client.OnChannelJoin += ChannelJoinEvent;
+        _client.OnChannelPart += ChannelPartEvent;
         _client.OnConnect += OnConnect;
         _client.OnDisconnect += OnDisconnect;
         _client.OnReconnect += OnReconnect;
@@ -34,52 +37,79 @@ public class TwitchService
 
     private ValueTask OnConnect()
     {
-        Log.Information($"Connected.");
+        Log.Information("Connected.");
+        _connected = true;
         ConnectionStatus?.Invoke(TwitchStatus.Connected);
         return ValueTask.CompletedTask;
     }
 
     private ValueTask OnDisconnect()
     {
-        Log.Information($"Disconnected.");
+        Log.Information("Disconnected.");
+        if (!_connected)
+        {
+            ConnectionStatus?.Invoke(TwitchStatus.Reconnecting);
+            return ValueTask.CompletedTask;
+        }
+
+        _connected = false;
         ConnectionStatus?.Invoke(TwitchStatus.Disconnected);
         return ValueTask.CompletedTask;
     }
 
     private ValueTask OnReconnect()
     {
-        Log.Information($"Reconnected.");
-        ConnectionStatus?.Invoke(TwitchStatus.Reconnecting);
+        _connected = true;
+        Log.Information("Reconnected.");
+        ConnectionStatus?.Invoke(TwitchStatus.Connected);
         return ValueTask.CompletedTask;
     }
 
-    public async void ConnectAsync(string channel)
+    public async Task ConnectAsync(string channel)
     {
-        if (_connected)
+        Log.Information("Connecting...");
+        if (string.IsNullOrWhiteSpace(channel))
+        {
+            Log.Information("Channel is empty.");
+            return;
+        }
+
+        if (!_isFirstConnect)
         {
             await _client.ReconnectAsync();
+            await _client.JoinChannel(channel);
             return;
         }
 
         await _client.ConnectAsync();
         await _client.JoinChannel(channel);
-        _connected = true;
+        _isFirstConnect = false;
     }
 
-    public async void DisconnectAsync()
+    public async Task DisconnectAsync()
     {
         foreach (var channel in _client.JoinedChannels)
         {
+            Log.Information($"Disconnecting from {channel}.");
             await _client.PartChannel(channel);
         }
-        
-        await _client.DisconnectAsync();
     }
 
     private ValueTask ChannelJoinEvent(IrcChannel channel)
     {
-        Log.Information($"Channel joined: {channel.Name}");
+        Log.Information($"Channel joined: {channel.Name}, we're in {_client.JoinedChannels.Count} channels");
         return ValueTask.CompletedTask;
+    }
+
+    private async ValueTask ChannelPartEvent(IPartedChannel channel)
+    {
+        Log.Information($"Channel parted: {channel.Name}");
+
+        if (_client.JoinedChannels.Count == 0)
+        {
+            Log.Information("We are in 0 channels, disconnecting.");
+            await _client.DisconnectAsync();
+        }
     }
 
     private ValueTask MessageEvent(Privmsg message)
