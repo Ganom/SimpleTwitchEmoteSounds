@@ -18,6 +18,6 @@ jobs:
       - name: Install .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.8
+          dotnet-version: 8.0.x
       - name: Publish Application
         run: dotnet publish SimpleTwitchEmoteSounds/SimpleTwitchEmoteSounds.csproj -c Release -o publish -r win-x64 --self-contained false
