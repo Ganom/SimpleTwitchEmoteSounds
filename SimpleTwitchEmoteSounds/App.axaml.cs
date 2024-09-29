@@ -1,19 +1,25 @@
+using System;
+using System.Linq;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Templates;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
-using SimpleTwitchEmoteSounds.Extensions;
+using SimpleTwitchEmoteSounds.Services;
 using SimpleTwitchEmoteSounds.ViewModels;
-using SimpleTwitchEmoteSounds.Views;
 
 namespace SimpleTwitchEmoteSounds;
 
-public partial class App : Application
+public class App : Application
 {
+    private IServiceProvider? _provider;
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        _provider = ConfigureServices();
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -22,30 +28,36 @@ public partial class App : Application
         // Without this line you will get duplicate validations from both Avalonia and CT
         BindingPlugins.DataValidators.RemoveAt(0);
 
-        // Register all the services needed for the application to run
-        var collection = new ServiceCollection();
-        collection.AddCommonServices();
-
-        // Creates a ServiceProvider containing services from the provided IServiceCollection
-        var services = collection.BuildServiceProvider();
-
-        var vm = services.GetRequiredService<MainWindowViewModel>();
-        switch (ApplicationLifetime)
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            case IClassicDesktopStyleApplicationLifetime desktop:
-                desktop.MainWindow = new MainWindow
-                {
-                    DataContext = vm
-                };
-                break;
-            case ISingleViewApplicationLifetime singleViewPlatform:
-                singleViewPlatform.MainView = new MainWindow
-                {
-                    DataContext = vm
-                };
-                break;
+            var viewLocator = _provider?.GetRequiredService<IDataTemplate>();
+            var mainViewModel = _provider?.GetRequiredService<AppViewModel>();
+
+            desktop.MainWindow = viewLocator?.Build(mainViewModel) as Window;
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static ServiceProvider ConfigureServices()
+    {
+        var viewLocator = Current?.DataTemplates.First(x => x is ViewLocator);
+        var services = new ServiceCollection();
+
+        // Services
+        if (viewLocator is not null)
+            services.AddSingleton(viewLocator);
+        services.AddSingleton<PageNavigationService>();
+        services.AddSingleton<TwitchService>();
+
+        // ViewModels
+        services.AddSingleton<AppViewModel>();
+        var types = AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(s => s.GetTypes())
+            .Where(p => !p.IsAbstract && typeof(ViewModelBase).IsAssignableFrom(p));
+        foreach (var type in types)
+            services.AddSingleton(typeof(ViewModelBase), type);
+
+        return services.BuildServiceProvider();
     }
 }

@@ -42,4 +42,10 @@
 		<PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
 		<PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Views\AppView.cs">
+	    <DependentUpon>AppView.axaml</DependentUpon>
+	  </Compile>
+	</ItemGroup>
 </Project>

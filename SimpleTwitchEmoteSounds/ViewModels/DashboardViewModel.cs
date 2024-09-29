@@ -18,11 +18,12 @@ using SimpleTwitchEmoteSounds.Models;
 using SimpleTwitchEmoteSounds.Services;
 using SimpleTwitchEmoteSounds.Views;
 
+// ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable UnusedParameterInPartialMethod
 
 namespace SimpleTwitchEmoteSounds.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase
+public partial class DashboardViewModel : ViewModelBase
 {
     [ObservableProperty] private string _username = ConfigService.State.Username;
     [ObservableProperty] private bool _isConnected;
@@ -35,7 +36,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private readonly TwitchService _twitchService;
 
-    public MainWindowViewModel(TwitchService twitchService)
+    public DashboardViewModel(TwitchService twitchService)
     {
         _twitchService = twitchService;
         _twitchService.ConnectionStatus += TwitchServiceConnectionStatus;
@@ -290,9 +291,10 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task PreviewSound(SoundCommand soundCommand)
+    private Task PreviewSound(SoundCommand soundCommand)
     {
-        await AudioService.PlaySound(soundCommand);
+        _ = AudioService.PlaySound(soundCommand);
+        return Task.CompletedTask;
     }
 
     [RelayCommand]
@@ -313,10 +315,11 @@ public partial class MainWindowViewModel : ViewModelBase
             title,
             message,
             ButtonEnum.YesNo,
-            Icon.Question
+            Icon.Question,
+            WindowStartupLocation.CenterOwner
         );
 
-        return await messageBoxStandardWindow.ShowAsync();
+        return await messageBoxStandardWindow.ShowWindowDialogAsync(GetMainWindow());
     }
 
     private static Window GetMainWindow()

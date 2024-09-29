@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Avalonia;
 using Avalonia.Controls;
 using SimpleTwitchEmoteSounds.Models;
@@ -6,9 +6,9 @@ using SimpleTwitchEmoteSounds.Services;
 
 namespace SimpleTwitchEmoteSounds.Views;
 
-public partial class MainWindow : Window
+public partial class AppView : Window
 {
-    public MainWindow()
+    public AppView()
     {
         InitializeComponent();
         Width = Settings.Width;
