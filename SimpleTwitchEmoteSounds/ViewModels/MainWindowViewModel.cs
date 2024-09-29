@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -11,6 +13,7 @@ using MiniTwitch.Irc.Models;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using Serilog;
+using SimpleTwitchEmoteSounds.Common;
 using SimpleTwitchEmoteSounds.Extensions;
 using SimpleTwitchEmoteSounds.Models;
 using SimpleTwitchEmoteSounds.Services;
@@ -36,7 +39,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _twitchService = twitchService;
         _twitchService.ConnectionStatus += TwitchServiceConnectionStatus;
         _twitchService.MessageLogged += TwitchServiceMessageLogged;
-        
+
         if (!string.IsNullOrEmpty(Username))
         {
             _twitchService.ConnectAsync(Username);
@@ -62,16 +65,54 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        Log.Information($"msg: {msg.Content}");
-
         foreach (var soundCommand in SoundCommands)
         {
-            if (!soundCommand.Enabled) continue;
-            if (!msg.Content.Trim().StartsWith(soundCommand.Name)) continue;
-            Log.Information($"triggered sound: {soundCommand.Name}");
+            if (!soundCommand.Enabled)
+            {
+                Log.Information($"Sound command '{soundCommand.Name}' is disabled. Skipping.");
+                continue;
+            }
+
+            var isMatch = soundCommand.Names.Any(name =>
+            {
+                return soundCommand.SelectedMatchType switch
+                {
+                    MatchType.Equals => msg.Content.Trim().Equals(name),
+                    MatchType.StartsWith => msg.Content.Trim().StartsWith(name),
+                    MatchType.ContainsWord => Regex.IsMatch(msg.Content, $@"\b{Regex.Escape(name)}\b"),
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+            });
+
+            if (!isMatch)
+            {
+                continue;
+            }
+
+            var shouldPlay = ShouldPlaySound(float.Parse(soundCommand.PlayChance));
+            Log.Information(
+                $"Command '{soundCommand.Name}' matched. Play chance: {soundCommand.PlayChance}%. Should play: {shouldPlay}");
+
+            if (!shouldPlay)
+            {
+                Log.Information(
+                    $"Command '{soundCommand.Name}' matched but didn't pass the play chance check. Continuing to next command.");
+                continue;
+            }
+
+            Log.Information($"Playing sound for command: {soundCommand.Name}");
             await AudioService.PlaySound(soundCommand);
             break;
         }
+    }
+
+    private static bool ShouldPlaySound(float playChance)
+    {
+        var randomValue = (float)Random.Shared.NextDouble();
+        var shouldPlay = randomValue <= playChance;
+        Log.Information(
+            $"Play chance check: Random value: {randomValue:F4}, Play chance: {playChance:F4}, Should play: {shouldPlay}");
+        return shouldPlay;
     }
 
     private void TwitchServiceConnectionStatus(TwitchStatus obj)
@@ -100,7 +141,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     partial void OnSearchTextChanged(string value)
     {
-        FilteredSoundCommands.Refresh();
+        Debouncer.Debounce("refresh", () => FilteredSoundCommands.Refresh(), 300);
     }
 
     [RelayCommand]
@@ -171,7 +212,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 {
                     FileName = f.Name,
                     FilePath = f.Path.LocalPath,
-                    Percentage = 100 / files.Count
+                    Percentage = (100 / files.Count).ToString()
                 });
             }
 
@@ -205,7 +246,7 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 FileName = f.Name,
                 FilePath = f.Path.LocalPath,
-                Percentage = 100 / (soundCommand.SoundFiles.Count + 1)
+                Percentage = (100 / (soundCommand.SoundFiles.Count + 1)).ToString()
             });
         }
     }

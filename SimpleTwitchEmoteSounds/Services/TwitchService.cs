@@ -68,6 +68,11 @@ public class TwitchService
 
     public async void DisconnectAsync()
     {
+        foreach (var channel in _client.JoinedChannels)
+        {
+            await _client.PartChannel(channel);
+        }
+        
         await _client.DisconnectAsync();
     }
 

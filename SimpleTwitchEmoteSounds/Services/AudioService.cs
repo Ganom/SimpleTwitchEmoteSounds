@@ -20,14 +20,16 @@ public static class AudioService
 
         var selectedFile = SelectRandomSoundFile(soundCommand);
 
-        if (string.IsNullOrEmpty(selectedFile.FilePath) || !File.Exists(selectedFile.FilePath))
+        if (selectedFile == null ||
+            string.IsNullOrEmpty(selectedFile.FilePath) ||
+            !File.Exists(selectedFile.FilePath))
         {
             return;
         }
 
         try
         {
-            await PlayAudioFile(selectedFile.FilePath, soundCommand.Volume);
+            await PlayAudioFile(selectedFile.FilePath, float.Parse(soundCommand.Volume));
         }
         catch (Exception ex)
         {
@@ -35,22 +37,29 @@ public static class AudioService
         }
     }
 
-    private static SoundFile SelectRandomSoundFile(SoundCommand soundCommand)
+    private static SoundFile? SelectRandomSoundFile(SoundCommand soundCommand)
     {
         var random = new Random();
-        var totalPercentage = soundCommand.SoundFiles.Sum(sf => sf.Percentage);
-        var randomValue = random.Next(1, totalPercentage + 1);
-        var cumulativePercentage = 0;
+        var totalProbability = soundCommand.SoundFiles.Sum(sf => float.Parse(sf.Percentage));
+        var randomValue = (float)(random.NextDouble() * totalProbability);
+        var cumulativeProbability = 0f;
+
+        Log.Information($"Sound selection: Total probability: {totalProbability:F4}, Random value: {randomValue:F4}");
 
         foreach (var soundFile in soundCommand.SoundFiles)
         {
-            cumulativePercentage += soundFile.Percentage;
-            if (randomValue <= cumulativePercentage)
-            {
-                return soundFile;
-            }
+            var probability = float.Parse(soundFile.Percentage);
+            cumulativeProbability += probability;
+
+            Log.Information(
+                $"Checking sound file: {soundFile.FileName}, Probability: {probability:F4}, Cumulative: {cumulativeProbability:F4}");
+
+            if (!(randomValue <= cumulativeProbability)) continue;
+            Log.Information($"Selected sound file: {soundFile.FileName}");
+            return soundFile;
         }
 
+        Log.Warning("No sound file selected");
         return null;
     }
 
