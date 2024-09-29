@@ -1,0 +1,23 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-to-github-releases:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Get Version from Project File
+        id: get-version
+        shell: bash
+        run: echo "version=$(grep -oE '<Version>[^<]+' SimpleTwitchEmoteSounds/SimpleTwitchEmoteSounds.csproj | sed 's/<Version>//')" >> $GITHUB_OUTPUT
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Publish Application
+        run: dotnet publish SimpleTwitchEmoteSounds/SimpleTwitchEmoteSounds.csproj -c Release -o publish -r win-x64 --self-contained false
