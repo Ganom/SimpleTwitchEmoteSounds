@@ -10,7 +10,6 @@ public partial class AppView : Window
 {
     public AppView()
     {
-        
         InitializeComponent();
         Width = Settings.Width;
         Height = Settings.Height;
