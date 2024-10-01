@@ -10,7 +10,6 @@ jobs:
     runs-on: windows-latest
     env:
       Project_Path: SimpleTwitchEmoteSounds/SimpleTwitchEmoteSounds.csproj
-      EXE_Path: publish/SimpleTwitchEmoteSounds.exe
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -26,10 +25,10 @@ jobs:
         run: dotnet build ${{ env.Project_Path }} -c Release --no-restore
 
       - name: Publish Application
-        run: dotnet publish ${{ env.Project_Path }} -c Release -o "publish/" -r win-x64 --self-contained false
+        run: dotnet publish ${{ env.Project_Path }} -c Release -o ./publish -r win-x64 --self-contained false
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: SimpleTwitchEmoteSounds
-          path: ${{ env.EXE_Path }}
+          path: ./publish
