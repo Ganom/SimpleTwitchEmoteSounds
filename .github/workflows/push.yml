@@ -18,14 +18,9 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - name: Restore
-        run: dotnet restore ${{ env.Project_Path }}
-
-      - name: Build
-        run: dotnet build ${{ env.Project_Path }} -c Release --no-restore
 
       - name: Publish Application
-        run: dotnet publish ${{ env.Project_Path }} -c Release -o ./publish -r win-x64 --self-contained false
+        run: dotnet publish ${{ env.Project_Path }} -c Release -o ./publish -r win-x64 --self-contained false -p:PublishSingleFile=true
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
