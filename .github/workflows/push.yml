@@ -20,7 +20,7 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Publish Application
-        run: dotnet publish ${{ env.Project_Path }} -c Release -o ./publish -r win-x64 --self-contained false -p:PublishSingleFile=true
+        run: dotnet publish ${{ env.Project_Path }} -c Release -o ./publish -r win-x64 -p:PublishSingleFile=true -p:DebugType=none -p:PublishReadyToRun=false -p:IncludeNativeLibrariesForSelfExtract=true --self-contained false
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
