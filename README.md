@@ -1,4 +1,4 @@
-### Simple Twitch Emote Sounds
+### 🐮 Simple Twitch Emote Sounds
 
 This application was created as a simple, easy-to-use, quick to set up, sound trigger. The goal is to reduce the barrier of entry and enable creators to add an Emote Sound within seconds, instead of the minute(s)-long process with current mainstream options like MixItUp and Streamer.bot.
 
