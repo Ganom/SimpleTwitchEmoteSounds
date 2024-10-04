@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  deploy-to-github-releases:
+  push-deploy:
     runs-on: windows-latest
     env:
       Project_Path: SimpleTwitchEmoteSounds/SimpleTwitchEmoteSounds.csproj
@@ -27,9 +27,3 @@ jobs:
         with:
           name: SimpleTwitchEmoteSounds
           path: ./publish
-
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: ./publish/SimpleTwitchEmoteSounds.exe

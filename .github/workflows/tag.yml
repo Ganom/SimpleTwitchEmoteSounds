@@ -32,3 +32,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ./publish/SimpleTwitchEmoteSounds.exe
+          token: ${{ secrets.STES_TOKEN }}
