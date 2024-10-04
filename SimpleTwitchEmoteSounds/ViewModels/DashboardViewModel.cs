@@ -28,9 +28,9 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private string _username = ConfigService.State.Username;
     [ObservableProperty] private bool _isConnected;
     [ObservableProperty] private string _connectButtonText = "Connect";
+    [ObservableProperty] private string _connectButtonColor = "white";
     [ObservableProperty] private bool _isEnabled = true;
     [ObservableProperty] private string _searchText = string.Empty;
-    [ObservableProperty] private string _connectButtonColor = "white";
     private static ObservableCollection<SoundCommand> SoundCommands => ConfigService.Settings.SoundCommands;
     public FilteredObservableCollection<SoundCommand> FilteredSoundCommands { get; }
 
