@@ -14,7 +14,7 @@
 		<PackageProjectUrl>https://github.com/Ganom</PackageProjectUrl>
 		<PackageLicenseUrl>https://github.com/Ganom</PackageLicenseUrl>
 		<RepositoryUrl>https://github.com/Ganom</RepositoryUrl>
-		<ApplicationIcon>Assets\avalonia-logo.ico</ApplicationIcon>
+		<ApplicationIcon>Assets\cow.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
