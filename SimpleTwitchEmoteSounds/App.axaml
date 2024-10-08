@@ -13,7 +13,6 @@
     <Application.Styles>
         <FluentTheme />
         <!--<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />-->
-        <StyleInclude Source="avares://Semi.Avalonia.DataGrid/Index.axaml" />
         <semi:SemiTheme Locale="en-us" />
     </Application.Styles>
 </Application>

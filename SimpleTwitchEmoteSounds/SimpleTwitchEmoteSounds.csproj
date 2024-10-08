@@ -22,12 +22,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Avalonia" Version="11.2.0-beta2" />
-		<PackageReference Include="Avalonia.Desktop" Version="11.2.0-beta2" />
-		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.0-beta2" />
-		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.0-beta2" />
+		<PackageReference Include="Avalonia" Version="11.2.0-rc1" />
+		<PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.3" />
+		<PackageReference Include="Avalonia.Desktop" Version="11.2.0-rc1" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.0-rc1" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.0-rc1" />
 		<!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.0-beta2" />
+		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.0-rc1" />
 		<PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.1.0.4" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
 		<PackageReference Include="MessageBox.Avalonia" Version="3.1.6" />
@@ -35,12 +36,12 @@
 		<PackageReference Include="MiniTwitch.Irc" Version="1.2.16" />
 		<PackageReference Include="NAudio" Version="2.2.1" />
 		<PackageReference Include="Semi.Avalonia" Version="11.2.0-beta1" />
-		<PackageReference Include="Semi.Avalonia.DataGrid" Version="11.1.0.4" />
 		<PackageReference Include="Serilog" Version="4.0.2-dev-02226" />
 		<PackageReference Include="Serilog.Expressions" Version="5.0.1-dev-00182" />
 		<PackageReference Include="Serilog.Extensions.Logging" Version="8.0.1-dev-10398" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
 		<PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+		<PackageReference Include="SharpHook.Reactive" Version="5.3.8" />
 	</ItemGroup>
 
 	<ItemGroup>
