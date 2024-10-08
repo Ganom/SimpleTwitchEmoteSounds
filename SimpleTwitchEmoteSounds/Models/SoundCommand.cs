@@ -15,7 +15,7 @@ public partial class SoundCommand : ObservableObject
     [ObservableProperty] private bool _isExpanded = true;
     [ObservableProperty] private string _playChance = "1";
     [ObservableProperty] private MatchType _selectedMatchType = MatchType.StartsWith;
-    [ObservableProperty] private string _volume = "0.5";
+    [ObservableProperty] private string _volume = "1";
     [JsonIgnore] public string DisplayName => Category == string.Empty ? $"{Name}" : $"({Category}) {Name}";
     [JsonIgnore] public ObservableCollection<MatchType> MatchTypes => new(Enum.GetValues<MatchType>());
     [JsonIgnore] public string[] Names => Name.Split(',').Select(n => n.Trim()).ToArray();
