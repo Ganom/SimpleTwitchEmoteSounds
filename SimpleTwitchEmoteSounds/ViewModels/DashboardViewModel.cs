@@ -13,6 +13,7 @@ using MiniTwitch.Irc.Models;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using Serilog;
+using SharpHook.Native;
 using SimpleTwitchEmoteSounds.Extensions;
 using SimpleTwitchEmoteSounds.Models;
 using SimpleTwitchEmoteSounds.Services;
@@ -31,16 +32,23 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private string _connectButtonColor = "white";
     [ObservableProperty] private bool _isEnabled = true;
     [ObservableProperty] private string _searchText = string.Empty;
+    [ObservableProperty] private string _toggleButtonText = "Register Hotkey";
+    [ObservableProperty] private bool _isListening;
+    private static KeyCode ToggleHotkey => ConfigService.Settings.EnableKey;
     private static ObservableCollection<SoundCommand> SoundCommands => ConfigService.Settings.SoundCommands;
     public FilteredObservableCollection<SoundCommand> FilteredSoundCommands { get; }
 
     private readonly TwitchService _twitchService;
+    private readonly IHotkeyService _hotkeyService;
 
-    public DashboardViewModel(TwitchService twitchService)
+    public DashboardViewModel(TwitchService twitchService, IHotkeyService hotkeyService)
     {
         _twitchService = twitchService;
+        _hotkeyService = hotkeyService;
         _twitchService.ConnectionStatus += TwitchServiceConnectionStatus;
         _twitchService.MessageLogged += TwitchServiceMessageLogged;
+        _hotkeyService.RegisterHotkey(ToggleHotkey, ToggleEnabled);
+        ToggleButtonText = $"{ToggleHotkey.ToString().ToUpperInvariant().Replace("VC", "")}";
 
         ConfigService.Settings.RefreshSubscriptions();
         FilteredSoundCommands = new FilteredObservableCollection<SoundCommand>(
@@ -307,6 +315,39 @@ public partial class DashboardViewModel : ViewModelBase
                 break;
             }
         }
+    }
+
+    [RelayCommand]
+    private void ToggleListening()
+    {
+        IsListening = !IsListening;
+        if (IsListening)
+        {
+            ToggleButtonText = "Cancel";
+            _hotkeyService.StartListeningForNextKey(RegisterHotkey);
+        }
+        else
+        {
+            ResetState();
+        }
+    }
+
+    [RelayCommand]
+    private void RegisterHotkey(KeyCode key)
+    {
+        _hotkeyService.UnregisterHotkey(ToggleHotkey);
+
+        ConfigService.Settings.EnableKey = key;
+
+        _hotkeyService.RegisterHotkey(ToggleHotkey, ToggleEnabled);
+        ResetState();
+    }
+
+    private void ResetState()
+    {
+        IsListening = false;
+        ToggleButtonText = $"{ToggleHotkey.ToString().ToUpperInvariant().Replace("VC", "")}";
+        _hotkeyService.StopListeningForNextKey();
     }
 
     private static async Task<ButtonResult> ShowConfirmationDialog(string title, string message)

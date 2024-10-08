@@ -31,9 +31,10 @@ public class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var viewLocator = _provider?.GetRequiredService<IDataTemplate>();
-            var mainViewModel = _provider?.GetRequiredService<AppViewModel>();
+            var appViewModel = _provider?.GetRequiredService<AppViewModel>();
 
-            desktop.MainWindow = viewLocator?.Build(mainViewModel) as Window;
+            desktop.MainWindow = viewLocator?.Build(appViewModel) as Window;
+            desktop.Exit += OnExit;
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -49,6 +50,7 @@ public class App : Application
             services.AddSingleton(viewLocator);
         services.AddSingleton<PageNavigationService>();
         services.AddSingleton<TwitchService>();
+        services.AddSingleton<IHotkeyService, HotkeyService>();
 
         // ViewModels
         services.AddSingleton<AppViewModel>();
@@ -59,5 +61,10 @@ public class App : Application
             services.AddSingleton(typeof(ViewModelBase), type);
 
         return services.BuildServiceProvider();
+    }
+
+    private void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
+    {
+        _provider?.GetRequiredService<IHotkeyService>().Dispose();
     }
 }

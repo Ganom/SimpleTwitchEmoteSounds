@@ -3,12 +3,14 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using SharpHook.Native;
 
 namespace SimpleTwitchEmoteSounds.Models;
 
 public partial class AppSettings : ObservableObject
 {
     [ObservableProperty] private ObservableCollection<SoundCommand> _soundCommands = [];
+    [ObservableProperty] private KeyCode _enableKey = KeyCode.VcF20;
 
     public void RefreshSubscriptions()
     {

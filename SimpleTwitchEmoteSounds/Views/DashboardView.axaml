@@ -224,6 +224,10 @@
                             Content="{Binding IsEnabled, Converter={StaticResource BoolToEnabledDisabledConverter}}"
                             Margin="10,0,0,0"
                             Width="120" />
+                    <Button Content="{Binding ToggleButtonText}"
+                            Command="{Binding ToggleListeningCommand}"
+                            HorizontalAlignment="Center"
+                            Margin="10,0,0,0" />
                 </StackPanel>
             </DockPanel>
             <Grid ColumnDefinitions="*, Auto, Auto, Auto"
