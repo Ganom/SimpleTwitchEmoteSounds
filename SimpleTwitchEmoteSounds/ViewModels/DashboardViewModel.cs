@@ -13,7 +13,6 @@ using MiniTwitch.Irc.Models;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using Serilog;
-using SharpHook.Native;
 using SimpleTwitchEmoteSounds.Extensions;
 using SimpleTwitchEmoteSounds.Models;
 using SimpleTwitchEmoteSounds.Services;
@@ -34,7 +33,7 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private string _toggleButtonText = "Register Hotkey";
     [ObservableProperty] private bool _isListening;
-    private static KeyCode ToggleHotkey => ConfigService.Settings.EnableKey;
+    private static Hotkey ToggleHotkey => ConfigService.Settings.EnableKey;
     private static ObservableCollection<SoundCommand> SoundCommands => ConfigService.Settings.SoundCommands;
     public FilteredObservableCollection<SoundCommand> FilteredSoundCommands { get; }
 
@@ -333,12 +332,10 @@ public partial class DashboardViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void RegisterHotkey(KeyCode key)
+    private void RegisterHotkey(Hotkey combo)
     {
         _hotkeyService.UnregisterHotkey(ToggleHotkey);
-
-        ConfigService.Settings.EnableKey = key;
-
+        ConfigService.Settings.EnableKey = combo;
         _hotkeyService.RegisterHotkey(ToggleHotkey, ToggleEnabled);
         ResetState();
     }
@@ -346,7 +343,7 @@ public partial class DashboardViewModel : ViewModelBase
     private void ResetState()
     {
         IsListening = false;
-        ToggleButtonText = $"{ToggleHotkey.ToString().ToUpperInvariant().Replace("VC", "")}";
+        ToggleButtonText = ToggleHotkey.ToString();
         _hotkeyService.StopListeningForNextKey();
     }
 

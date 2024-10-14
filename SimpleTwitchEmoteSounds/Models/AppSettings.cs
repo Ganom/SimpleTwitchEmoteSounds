@@ -10,7 +10,7 @@ namespace SimpleTwitchEmoteSounds.Models;
 public partial class AppSettings : ObservableObject
 {
     [ObservableProperty] private ObservableCollection<SoundCommand> _soundCommands = [];
-    [ObservableProperty] private KeyCode _enableKey = KeyCode.VcF20;
+    [ObservableProperty] private Hotkey _enableKey = new([KeyCode.VcF20]);
 
     public void RefreshSubscriptions()
     {

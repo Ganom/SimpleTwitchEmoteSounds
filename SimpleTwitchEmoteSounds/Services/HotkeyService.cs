@@ -4,55 +4,89 @@ using Avalonia.Threading;
 using SharpHook;
 using SharpHook.Native;
 using SharpHook.Reactive;
+using SimpleTwitchEmoteSounds.Models;
 
 namespace SimpleTwitchEmoteSounds.Services;
 
 public class HotkeyService : IHotkeyService
 {
     private readonly SimpleReactiveGlobalHook _globalHook = new();
-    private readonly Dictionary<KeyCode, Action> _hotkeys = new();
-    private Action<KeyCode>? _nextKeyCallback;
+    private readonly Dictionary<Hotkey, Action> _hotkeys = new();
+    private readonly HashSet<KeyCode> _currentlyPressedKeys = [];
+    private Action<Hotkey>? _nextKeyCallback;
+    private bool _isListeningForHotkey;
+
+    private static readonly HashSet<KeyCode> ModifierKeys =
+    [
+        KeyCode.VcLeftControl,
+        KeyCode.VcRightControl,
+        KeyCode.VcLeftShift,
+        KeyCode.VcRightShift,
+        KeyCode.VcLeftAlt,
+        KeyCode.VcRightAlt,
+        KeyCode.VcLeftMeta,
+        KeyCode.VcRightMeta
+    ];
 
     public HotkeyService()
     {
         _globalHook.KeyPressed.Subscribe(OnKeyPressed);
+        _globalHook.KeyReleased.Subscribe(OnKeyReleased);
         _globalHook.RunAsync();
     }
 
-    public void RegisterHotkey(KeyCode key, Action action)
+    public void RegisterHotkey(Hotkey combo, Action action)
     {
-        _hotkeys[key] = action;
+        _hotkeys[combo] = action;
     }
 
-    public void UnregisterHotkey(KeyCode key)
+    public void UnregisterHotkey(Hotkey combo)
     {
-        _hotkeys.Remove(key);
+        _hotkeys.Remove(combo);
     }
 
-    public void StartListeningForNextKey(Action<KeyCode> onKeyPressed)
+    public void StartListeningForNextKey(Action<Hotkey> onKeyPressed)
     {
         _nextKeyCallback = onKeyPressed;
+        _isListeningForHotkey = true;
+        _currentlyPressedKeys.Clear();
     }
 
     public void StopListeningForNextKey()
     {
         _nextKeyCallback = null;
+        _isListeningForHotkey = false;
+        _currentlyPressedKeys.Clear();
     }
 
     private void OnKeyPressed(KeyboardHookEventArgs e)
     {
+        _currentlyPressedKeys.Add(e.Data.KeyCode);
+
         Dispatcher.UIThread.InvokeAsync(() =>
         {
-            if (_nextKeyCallback != null)
+            if (_isListeningForHotkey)
             {
-                _nextKeyCallback(e.Data.KeyCode);
-                _nextKeyCallback = null;
+                if (ModifierKeys.Contains(e.Data.KeyCode)) return;
+
+                var combo = new Hotkey(_currentlyPressedKeys);
+                _nextKeyCallback?.Invoke(combo);
+                StopListeningForNextKey();
             }
-            else if (_hotkeys.TryGetValue(e.Data.KeyCode, out var action))
+            else
             {
-                action();
+                var combo = new Hotkey(_currentlyPressedKeys);
+                if (_hotkeys.TryGetValue(combo, out var action))
+                {
+                    action();
+                }
             }
         });
+    }
+
+    private void OnKeyReleased(KeyboardHookEventArgs e)
+    {
+        _currentlyPressedKeys.Remove(e.Data.KeyCode);
     }
 
     public void Dispose()
@@ -63,8 +97,8 @@ public class HotkeyService : IHotkeyService
 
 public interface IHotkeyService : IDisposable
 {
-    void RegisterHotkey(KeyCode key, Action action);
-    void UnregisterHotkey(KeyCode key);
-    void StartListeningForNextKey(Action<KeyCode> onKeyPressed);
+    void RegisterHotkey(Hotkey combo, Action action);
+    void UnregisterHotkey(Hotkey combo);
+    void StartListeningForNextKey(Action<Hotkey> onKeyPressed);
     void StopListeningForNextKey();
 }

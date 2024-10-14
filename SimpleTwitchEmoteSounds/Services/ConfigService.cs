@@ -77,22 +77,72 @@ public static class ConfigService
         {
             Directory.CreateDirectory(settingsFolder);
             var defaultConfig = new T();
-            var defaultConfigJson =
-                JsonSerializer.Serialize(defaultConfig, Options);
-            File.WriteAllText(configFilePath, defaultConfigJson);
+            SaveConfig(name, defaultConfig);
             return defaultConfig;
         }
 
         var configJson = File.ReadAllText(configFilePath);
-        return JsonSerializer.Deserialize<T>(configJson) ?? new T();
+        var config = new T();
+        var configChanged = false;
+
+        try
+        {
+            using var document = JsonDocument.Parse(configJson);
+            var root = document.RootElement;
+            foreach (var prop in typeof(T).GetProperties())
+            {
+                if (root.TryGetProperty(prop.Name, out var element))
+                {
+                    try
+                    {
+                        var value =
+                            JsonSerializer.Deserialize(element.GetRawText(), prop.PropertyType, Options);
+                        prop.SetValue(config, value);
+                    }
+                    catch (JsonException)
+                    {
+                        Log.Warning($"Failed to deserialize property {prop.Name}. Using default value.");
+                        configChanged = true;
+                    }
+                }
+                else
+                {
+                    Log.Warning($"Property {prop.Name} not found in config. Using default value.");
+                    configChanged = true;
+                }
+            }
+        }
+        catch (JsonException ex)
+        {
+            Log.Error(ex, $"Error parsing {name} config. Using default values.");
+            config = new T();
+            configChanged = true;
+        }
+
+        if (configChanged)
+        {
+            SaveConfig(name, config, true);
+        }
+
+        return config;
     }
 
-    private static void SaveConfig<T>(string name, T config) where T : class
+    private static void SaveConfig<T>(string name, T config, bool createBackup = false) where T : class
     {
         var appLocation = AppDomain.CurrentDomain.BaseDirectory;
         var settingsFolder = Path.Combine(appLocation, "Settings");
         var configFilePath = Path.Combine(settingsFolder, $"{name}.json");
+        
+        if (createBackup && File.Exists(configFilePath))
+        {
+            var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+            var backupFilePath = Path.Combine(settingsFolder, $"{name}_backup_{timestamp}.json");
+            File.Copy(configFilePath, backupFilePath);
+            Log.Information($"Created backup of {name} config due to invalid properties: {backupFilePath}");
+        }
+        
         var configJson = JsonSerializer.Serialize(config, Options);
         File.WriteAllText(configFilePath, configJson);
+        Log.Information($"Saved updated {name} config");
     }
 }
