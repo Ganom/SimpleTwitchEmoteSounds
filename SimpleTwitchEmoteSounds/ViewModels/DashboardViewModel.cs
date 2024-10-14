@@ -33,7 +33,7 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private string _toggleButtonText = "Register Hotkey";
     [ObservableProperty] private bool _isListening;
-    private static Hotkey ToggleHotkey => ConfigService.Settings.EnableKey;
+    private static Hotkey ToggleHotkey => ConfigService.Settings.EnableHotkey;
     private static ObservableCollection<SoundCommand> SoundCommands => ConfigService.Settings.SoundCommands;
     public FilteredObservableCollection<SoundCommand> FilteredSoundCommands { get; }
 
@@ -47,7 +47,7 @@ public partial class DashboardViewModel : ViewModelBase
         _twitchService.ConnectionStatus += TwitchServiceConnectionStatus;
         _twitchService.MessageLogged += TwitchServiceMessageLogged;
         _hotkeyService.RegisterHotkey(ToggleHotkey, ToggleEnabled);
-        ToggleButtonText = $"{ToggleHotkey.ToString().ToUpperInvariant().Replace("VC", "")}";
+        ToggleButtonText = ToggleHotkey.ToString();
 
         ConfigService.Settings.RefreshSubscriptions();
         FilteredSoundCommands = new FilteredObservableCollection<SoundCommand>(
@@ -335,7 +335,7 @@ public partial class DashboardViewModel : ViewModelBase
     private void RegisterHotkey(Hotkey combo)
     {
         _hotkeyService.UnregisterHotkey(ToggleHotkey);
-        ConfigService.Settings.EnableKey = combo;
+        ConfigService.Settings.EnableHotkey = combo;
         _hotkeyService.RegisterHotkey(ToggleHotkey, ToggleEnabled);
         ResetState();
     }

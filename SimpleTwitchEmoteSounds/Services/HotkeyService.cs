@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Avalonia.Threading;
+using Serilog;
 using SharpHook;
 using SharpHook.Native;
 using SharpHook.Reactive;
@@ -37,11 +38,13 @@ public class HotkeyService : IHotkeyService
 
     public void RegisterHotkey(Hotkey combo, Action action)
     {
+        Log.Information($"Registering hotkey for {combo}");
         _hotkeys[combo] = action;
     }
 
     public void UnregisterHotkey(Hotkey combo)
     {
+        Log.Information($"Unregistering hotkey {combo}");
         _hotkeys.Remove(combo);
     }
 

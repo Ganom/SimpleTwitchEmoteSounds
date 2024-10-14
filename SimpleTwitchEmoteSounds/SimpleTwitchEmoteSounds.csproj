@@ -35,6 +35,7 @@
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0-rc.1.24431.7" />
 		<PackageReference Include="MiniTwitch.Irc" Version="1.2.16" />
 		<PackageReference Include="NAudio" Version="2.2.1" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="Semi.Avalonia" Version="11.2.0-beta1" />
 		<PackageReference Include="Serilog" Version="4.0.2-dev-02226" />
 		<PackageReference Include="Serilog.Expressions" Version="5.0.1-dev-00182" />
