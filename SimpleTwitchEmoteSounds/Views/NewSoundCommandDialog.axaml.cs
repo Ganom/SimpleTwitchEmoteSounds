@@ -1,8 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using SimpleTwitchEmoteSounds.ViewModels;
 
 namespace SimpleTwitchEmoteSounds.Views;
 
@@ -11,7 +10,8 @@ public partial class NewSoundCommandDialog : Window
     public NewSoundCommandDialog()
     {
         InitializeComponent();
-        KeyDown += NewSoundCommandDialog_KeyDown;
+        DataContext = new NewSoundCommandDialogViewModel();
+        ((NewSoundCommandDialogViewModel)DataContext).CloseRequested += ViewModel_CloseRequested;
     }
 
     private void InitializeComponent()
@@ -19,26 +19,8 @@ public partial class NewSoundCommandDialog : Window
         AvaloniaXamlLoader.Load(this);
     }
 
-    private void NewSoundCommandDialog_KeyDown(object? sender, KeyEventArgs e)
+    private void ViewModel_CloseRequested(object? sender, NewSoundCommandResult? result)
     {
-        if (e.Key == Key.Enter)
-        {
-            OkButton_Click(null, null);
-        }
-    }
-
-    private void OkButton_Click(object? sender, RoutedEventArgs? e)
-    {
-        var name = this.FindControl<TextBox>("NameTextBox")?.Text ?? string.Empty;
-        var category = this.FindControl<TextBox>("CategoryTextBox")?.Text ?? string.Empty;
-
-        Close(new NewSoundCommandResult(name, category));
-    }
-
-    private void CancelButton_Click(object? sender, RoutedEventArgs e)
-    {
-        Close(null);
+        Close(result);
     }
 }
-
-public record NewSoundCommandResult(string Name, string Category);
