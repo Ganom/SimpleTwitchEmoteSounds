@@ -62,10 +62,161 @@ public partial class DashboardViewModel : ViewModelBase
         }
     }
 
+    [RelayCommand]
+    private async Task Connect()
+    {
+        if (IsConnected)
+        {
+            await _twitchService.DisconnectAsync();
+        }
+        else
+        {
+            await _twitchService.ConnectAsync(Username);
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleEnabled()
+    {
+        IsEnabled = !IsEnabled;
+    }
+
+    [RelayCommand]
+    private async Task OpenStandardDialog()
+    {
+        var mainWindow = GetMainWindow();
+        var dialog = new NewSoundCommandDialog
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        var result = await dialog.ShowDialog<NewSoundCommandResult?>(mainWindow);
+
+        if (result is null)
+        {
+            return;
+        }
+
+        var topLevel = TopLevel.GetTopLevel(mainWindow);
+
+        var files = await topLevel?.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Select Audio Files",
+            AllowMultiple = true,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("Audio Files") { Patterns = ["*.mp3", "*.wav", "*.ogg"] }
+            ]
+        })!;
+
+        if (files is { Count: >= 1 })
+        {
+            var sc = new SoundCommand
+            {
+                Name = result.Name,
+                Category = result.Category,
+                SoundFiles = []
+            };
+
+            foreach (var f in files)
+            {
+                sc.SoundFiles.Add(new SoundFile
+                {
+                    FileName = f.Name,
+                    FilePath = f.Path.LocalPath,
+                    Percentage = "1"
+                });
+            }
+
+            SoundCommands.Add(sc);
+            FilteredSoundCommands.Refresh();
+            ConfigService.Settings.RefreshSubscriptions();
+        }
+    }
+
+    [RelayCommand]
+    private Task PreviewSound(SoundCommand soundCommand)
+    {
+        _ = AudioService.PlaySound(soundCommand);
+        return Task.CompletedTask;
+    }
+
+    [RelayCommand]
+    private async Task EditSound(SoundCommand soundCommand)
+    {
+        var dialog = new EditSoundCommandDialog(soundCommand)
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        var result = await dialog.ShowDialog<SoundCommand?>(GetMainWindow());
+
+        if (result != null)
+        {
+            FilteredSoundCommands.Refresh();
+            ConfigService.Settings.RefreshSubscriptions();
+        }
+    }
+
+    [RelayCommand]
+    private async Task RemoveSound(SoundCommand soundCommand)
+    {
+        var result = await ShowConfirmationDialog(
+            "Remove Sound",
+            $"Are you sure you want to remove the sound '{soundCommand.Name}'?");
+
+        if (result == ButtonResult.Yes)
+        {
+            SoundCommands.Remove(soundCommand);
+            FilteredSoundCommands.Refresh();
+            ConfigService.Settings.RefreshSubscriptions();
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleListening()
+    {
+        IsListening = !IsListening;
+        if (IsListening)
+        {
+            ToggleButtonText = "Cancel";
+            _hotkeyService.StartListeningForNextKey(RegisterHotkey);
+        }
+        else
+        {
+            ResetState();
+        }
+    }
+
+    [RelayCommand]
+    private void RegisterHotkey(Hotkey combo)
+    {
+        _hotkeyService.UnregisterHotkey(ToggleHotkey);
+        ConfigService.Settings.EnableHotkey = combo;
+        _hotkeyService.RegisterHotkey(ToggleHotkey, ToggleEnabled);
+        ResetState();
+    }
+
+    [RelayCommand]
+    private void ToggleSound(SoundCommand soundCommand)
+    {
+        soundCommand.Enabled = !soundCommand.Enabled;
+    }
+
     partial void OnUsernameChanged(string value)
     {
         ConfigService.State.Username = value;
     }
+
+    partial void OnSearchTextChanged(string value)
+    {
+        FilteredSoundCommands.Refresh();
+    }
+
+    partial void OnIsEnabledChanged(bool value)
+    {
+        OnPropertyChanged(nameof(EnabledButtonColor));
+    }
+
+    public string EnabledButtonColor => IsEnabled ? "#5dc264" : "#fc725a";
 
     private async void TwitchServiceMessageLogged(Privmsg msg)
     {
@@ -147,203 +298,6 @@ public partial class DashboardViewModel : ViewModelBase
             default:
                 throw new ArgumentOutOfRangeException(nameof(obj), obj, null);
         }
-    }
-
-    partial void OnSearchTextChanged(string value)
-    {
-        FilteredSoundCommands.Refresh();
-    }
-
-    [RelayCommand]
-    private async Task Connect()
-    {
-        if (IsConnected)
-        {
-            await _twitchService.DisconnectAsync();
-        }
-        else
-        {
-            await _twitchService.ConnectAsync(Username);
-        }
-    }
-
-    [RelayCommand]
-    private void ToggleEnabled()
-    {
-        IsEnabled = !IsEnabled;
-    }
-
-    public string EnabledButtonColor => IsEnabled ? "#5dc264" : "#fc725a";
-
-    partial void OnIsEnabledChanged(bool value)
-    {
-        OnPropertyChanged(nameof(EnabledButtonColor));
-    }
-
-    [RelayCommand]
-    private async Task OpenStandardDialog()
-    {
-        var mainWindow = GetMainWindow();
-        var dialog = new NewSoundCommandDialog
-        {
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
-        };
-        var result = await dialog.ShowDialog<NewSoundCommandResult?>(mainWindow);
-
-        if (result is null)
-        {
-            return;
-        }
-
-        var topLevel = TopLevel.GetTopLevel(mainWindow);
-
-        var files = await topLevel?.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Select Audio Files",
-            AllowMultiple = true,
-            FileTypeFilter =
-            [
-                new FilePickerFileType("Audio Files") { Patterns = ["*.mp3", "*.wav", "*.ogg"] }
-            ]
-        })!;
-
-        if (files is { Count: >= 1 })
-        {
-            var sc = new SoundCommand
-            {
-                Name = result.Name,
-                Category = result.Category,
-                SoundFiles = []
-            };
-
-            foreach (var f in files)
-            {
-                sc.SoundFiles.Add(new SoundFile
-                {
-                    FileName = f.Name,
-                    FilePath = f.Path.LocalPath,
-                    Percentage = "1"
-                });
-            }
-
-            SoundCommands.Add(sc);
-            FilteredSoundCommands.Refresh();
-            ConfigService.Settings.RefreshSubscriptions();
-        }
-    }
-
-    [RelayCommand]
-    private async Task AddSoundFile(SoundCommand soundCommand)
-    {
-        var topLevel = TopLevel.GetTopLevel(
-            ((IClassicDesktopStyleApplicationLifetime)Application.Current!.ApplicationLifetime!)
-            .MainWindow);
-
-        var files = await topLevel?.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Select Audio Files",
-            AllowMultiple = true,
-            FileTypeFilter =
-            [
-                new FilePickerFileType("Audio Files") { Patterns = ["*.mp3", "*.wav", "*.ogg"] }
-            ]
-        })!;
-
-        if (files is { Count: >= 1 })
-        {
-            foreach (var f in files)
-            {
-                soundCommand.SoundFiles.Add(new SoundFile
-                {
-                    FileName = f.Name,
-                    FilePath = f.Path.LocalPath,
-                    Percentage = "1"
-                });
-            }
-        }
-    }
-
-    [RelayCommand]
-    private async Task RemoveItem(SoundCommand soundCommand)
-    {
-        var result = await ShowConfirmationDialog(
-            "Remove Sound",
-            $"Are you sure you want to remove the sound '{soundCommand.Name}'?");
-
-        if (result == ButtonResult.Yes)
-        {
-            SoundCommands.Remove(soundCommand);
-            FilteredSoundCommands.Refresh();
-            ConfigService.Settings.RefreshSubscriptions();
-        }
-    }
-
-
-    [RelayCommand]
-    private void ExpandAll()
-    {
-        foreach (var soundCommand in SoundCommands)
-        {
-            soundCommand.IsExpanded = true;
-        }
-    }
-
-    [RelayCommand]
-    private void CollapseAll()
-    {
-        foreach (var soundCommand in SoundCommands)
-        {
-            soundCommand.IsExpanded = false;
-        }
-    }
-
-    [RelayCommand]
-    private Task PreviewSound(SoundCommand soundCommand)
-    {
-        _ = AudioService.PlaySound(soundCommand);
-        return Task.CompletedTask;
-    }
-
-    [RelayCommand]
-    private void RemoveSoundFile(SoundFile soundFile)
-    {
-        foreach (var soundCommand in SoundCommands)
-        {
-            if (soundCommand.SoundFiles.Remove(soundFile))
-            {
-                break;
-            }
-        }
-    }
-
-    [RelayCommand]
-    private void ToggleListening()
-    {
-        IsListening = !IsListening;
-        if (IsListening)
-        {
-            ToggleButtonText = "Cancel";
-            _hotkeyService.StartListeningForNextKey(RegisterHotkey);
-        }
-        else
-        {
-            ResetState();
-        }
-    }
-
-    [RelayCommand]
-    private void RegisterHotkey(Hotkey combo)
-    {
-        _hotkeyService.UnregisterHotkey(ToggleHotkey);
-        ConfigService.Settings.EnableHotkey = combo;
-        _hotkeyService.RegisterHotkey(ToggleHotkey, ToggleEnabled);
-        ResetState();
-    }
-
-    [RelayCommand]
-    private void ToggleSound(SoundCommand soundCommand)
-    {
-        soundCommand.Enabled = !soundCommand.Enabled;
     }
 
     private void ResetState()

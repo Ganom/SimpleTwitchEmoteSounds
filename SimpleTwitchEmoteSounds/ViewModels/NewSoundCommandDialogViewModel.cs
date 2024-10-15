@@ -13,13 +13,13 @@ public partial class NewSoundCommandDialogViewModel : ObservableObject
     [RelayCommand]
     private void Ok()
     {
-        CloseRequested?.Invoke(this, new NewSoundCommandResult(Name, Category));
+        CloseRequested.Invoke(this, new NewSoundCommandResult(Name, Category));
     }
 
     [RelayCommand]
     private void Cancel()
     {
-        CloseRequested?.Invoke(this, null);
+        CloseRequested.Invoke(this, null);
     }
 
     [RelayCommand]
@@ -31,7 +31,7 @@ public partial class NewSoundCommandDialogViewModel : ObservableObject
         }
     }
 
-    public event EventHandler<NewSoundCommandResult?>? CloseRequested;
+    public event EventHandler<NewSoundCommandResult?> CloseRequested = null!;
 }
 
 public record NewSoundCommandResult(string Name, string Category);
