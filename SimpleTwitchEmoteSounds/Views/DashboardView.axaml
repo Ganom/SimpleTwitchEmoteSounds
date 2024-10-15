@@ -3,13 +3,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:SimpleTwitchEmoteSounds.ViewModels"
-             xmlns:models="clr-namespace:SimpleTwitchEmoteSounds.Models"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SimpleTwitchEmoteSounds.Views.MainWindow"
              x:DataType="viewModels:DashboardViewModel"
              xmlns:converters="clr-namespace:SimpleTwitchEmoteSounds.Converters">
     <UserControl.Resources>
         <converters:BoolToEnabledDisabledConverter x:Key="BoolToEnabledDisabledConverter" />
+        <converters:EnabledToBoxShadowConverter x:Key="EnabledToBoxShadowConverter" />
+        <converters:BoolToDirectionConverter x:Key="BoolToDirectionConverter" />
     </UserControl.Resources>
 
     <Grid RowDefinitions="Auto,*">
@@ -64,200 +65,216 @@
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <ItemsRepeater ItemsSource="{Binding FilteredSoundCommands}" Margin="15">
                 <ItemsRepeater.Layout>
-                    <StackLayout Spacing="10" />
+                    <WrapLayout />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate>
                         <Border Theme="{StaticResource CardBorder}"
                                 CornerRadius="5"
-                                Margin="5"
+                                Margin="10"
                                 Padding="10"
+                                MinWidth="200"
+                                Name="Border"
                                 HorizontalAlignment="Stretch">
-                            <Expander ExpandDirection="Down"
-                                      IsExpanded="{Binding IsExpanded, Mode=TwoWay}"
-                                      HorizontalAlignment="Stretch">
-                                <Expander.Header>
-                                    <Grid ColumnDefinitions="Auto,*" HorizontalAlignment="Stretch">
-                                        <ToggleSwitch Grid.Column="0"
-                                                      IsChecked="{Binding Enabled, Mode=TwoWay}"
-                                                      Margin="0,0,10,0"
-                                                      HorizontalAlignment="Left" />
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding DisplayName}"
-                                                   FontWeight="Bold"
-                                                   VerticalAlignment="Center" />
-                                    </Grid>
-                                </Expander.Header>
-                                <Grid ColumnDefinitions="*,Auto" Margin="0,10">
-                                    <Grid Grid.Column="0"
-                                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*"
-                                          ColumnDefinitions="Auto,*"
-                                          Margin="0,0,10,0">
-                                        <TextBlock Grid.Row="0" Grid.Column="0"
-                                                   Text="Name:"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,10,0" />
-                                        <TextBox Grid.Row="0" Grid.Column="1"
-                                                 Text="{Binding Name}"
-                                                 Watermark="Sound Name"
-                                                 Margin="0,5" />
-
-                                        <TextBlock Grid.Row="1" Grid.Column="0"
-                                                   Text="Match Type:"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,10,0" />
-                                        <ComboBox Grid.Row="1" Grid.Column="1"
-                                                  ItemsSource="{Binding MatchTypes}"
-                                                  SelectedItem="{Binding SelectedMatchType}"
-                                                  Margin="0,5" />
-
-                                        <TextBlock Grid.Row="2" Grid.Column="0"
-                                                   Text="Category:"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,10,0" />
-                                        <TextBox Grid.Row="2" Grid.Column="1"
-                                                 Text="{Binding Category}"
-                                                 Watermark="Sound Category"
-                                                 Margin="0,5" />
-
-                                        <TextBlock Grid.Row="3" Grid.Column="0"
-                                                   Text="Volume:"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,10,0" />
-                                        <Grid Grid.Row="3" Grid.Column="1"
-                                              ColumnDefinitions="Auto,*"
-                                              Margin="0,5">
-                                            <NumericUpDown Grid.Column="0"
-                                                           Value="{Binding Volume}"
-                                                           Increment="0.05"
-                                                           Minimum="0"
-                                                           Maximum="3"
-                                                           Width="75"
-                                                           FormatString="P0"
-                                                           Margin="0,0,5,0" />
-                                            <Slider Grid.Column="1"
-                                                    Minimum="0.0"
-                                                    Maximum="3.0"
-                                                    Value="{Binding Volume}"
-                                                    TickFrequency="0.05"
-                                                    TickPlacement="BottomRight"
-                                                    IsSnapToTickEnabled="True" />
-                                        </Grid>
-
-                                        <TextBlock Grid.Row="4" Grid.Column="0"
-                                                   Text="Play Chance:"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,10,0" />
-                                        <Grid Grid.Row="4" Grid.Column="1"
-                                              ColumnDefinitions="Auto,*"
-                                              Margin="0,5">
-                                            <NumericUpDown Grid.Column="0"
-                                                           Value="{Binding PlayChance}"
-                                                           Increment="0.05"
-                                                           Minimum="0"
-                                                           Maximum="1"
-                                                           Width="75"
-                                                           FormatString="P0"
-                                                           Margin="0,0,5,0" />
-                                            <Slider Grid.Column="1"
-                                                    Value="{Binding PlayChance}"
-                                                    Minimum="0.0"
-                                                    Maximum="1.0"
-                                                    TickFrequency="0.05"
-                                                    TickPlacement="BottomRight"
-                                                    IsSnapToTickEnabled="True" />
-                                        </Grid>
-
-                                        <TextBlock Grid.Row="5" Grid.Column="0"
-                                                   Text="Sound Files:"
-                                                   VerticalAlignment="Top"
-                                                   Margin="0,5,10,0" />
-                                        <Grid Grid.Row="5" Grid.Column="1"
-                                              RowDefinitions="Auto,*"
-                                              Margin="0,5">
-                                            <Grid Grid.Row="0"
-                                                  ColumnDefinitions="*,180,100"
-                                                  Margin="0,2">
-                                                <TextBlock Grid.Column="0"
-                                                           Text="File Name"
-                                                           FontWeight="Bold" />
-                                                <TextBlock Grid.Column="1"
-                                                           Text="Percentage"
-                                                           FontWeight="Bold"
-                                                           Margin="5,0"
-                                                           TextAlignment="Center" />
-                                                <TextBlock Grid.Column="2"
-                                                           Text="Actions"
-                                                           FontWeight="Bold"
-                                                           Margin="5,0"
-                                                           TextAlignment="Center" />
-                                            </Grid>
-
-                                            <ItemsControl Grid.Row="1"
-                                                          ItemsSource="{Binding SoundFiles}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Grid ColumnDefinitions="*,Auto,100"
-                                                              Margin="2">
-                                                            <TextBlock Grid.Column="0"
-                                                                       Text="{Binding FileName}"
-                                                                       VerticalAlignment="Center" />
-                                                            <Grid Grid.Column="1"
-                                                                  ColumnDefinitions="Auto,*"
-                                                                  Margin="0,5">
-                                                                <NumericUpDown Grid.Column="0"
-                                                                               Value="{Binding Percentage}"
-                                                                               Increment="0.05"
-                                                                               Minimum="0"
-                                                                               Maximum="1"
-                                                                               Width="60"
-                                                                               ShowButtonSpinner="False"
-                                                                               FormatString="P0"
-                                                                               TextAlignment="Center"
-                                                                               Margin="0,0,5,0" />
-                                                                <Slider Grid.Column="1"
-                                                                        Value="{Binding Percentage}"
-                                                                        TickFrequency="0.05"
-                                                                        Minimum="0.0"
-                                                                        Maximum="1.0"
-                                                                        VerticalAlignment="Center"
-                                                                        TickPlacement="None"
-                                                                        Width="120"
-                                                                        IsSnapToTickEnabled="True" />
-                                                            </Grid>
-                                                            <Button Grid.Column="2"
-                                                                    Content="Remove"
-                                                                    Command="{Binding ((viewModels:DashboardViewModel)DataContext).RemoveSoundFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                    CommandParameter="{Binding}"
-                                                                    Margin="2" />
-                                                        </Grid>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </Grid>
-
-                                        <Button Grid.Row="6" Grid.Column="1"
-                                                Content="Add Sound File"
-                                                Command="{Binding ((viewModels:DashboardViewModel)DataContext).AddSoundFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}"
-                                                Margin="0,5,0,0" />
-                                    </Grid>
-
-                                    <StackPanel Grid.Column="1"
-                                                Orientation="Vertical"
-                                                Spacing="10"
-                                                Margin="5">
-                                        <Button Content="Preview Sound"
+                            <Border.BoxShadow>
+                                <MultiBinding Converter="{StaticResource EnabledToBoxShadowConverter}">
+                                    <Binding Path="Enabled" />
+                                    <Binding Path="#Border.IsPointerOver"></Binding>
+                                </MultiBinding>
+                            </Border.BoxShadow>
+                            <Interaction.Behaviors>
+                                <EventTriggerBehavior EventName="PointerPressed">
+                                    <InvokeCommandAction
+                                        Command="{Binding ((viewModels:DashboardViewModel)DataContext).ToggleSoundCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" />
+                                </EventTriggerBehavior>
+                            </Interaction.Behaviors>
+                            <StackPanel Orientation="Horizontal">
+                                <Grid RowDefinitions="Auto,Auto,Auto,*">
+                                    <TextBlock Grid.Column="0" Margin="0 0 0 10"
+                                               Text="{Binding DisplayName}"
+                                               FontWeight="Bold"
+                                               FontSize="20"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Center" />
+                                    
+                                    <StackPanel Grid.Row="1"
+                                                Orientation="Horizontal"
+                                                HorizontalAlignment="Center">
+                                        <Button Content="Preview"
                                                 Command="{Binding ((viewModels:DashboardViewModel)DataContext).PreviewSoundCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
-                                                HorizontalAlignment="Stretch" />
-                                        <Button Content="Remove Sound"
+                                                Margin="0,0,10,0" />
+                                        <Button Content="Remove"
                                                 Command="{Binding ((viewModels:DashboardViewModel)DataContext).RemoveItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}"
-                                                HorizontalAlignment="Stretch" />
+                                                CommandParameter="{Binding}" />
                                     </StackPanel>
+
+                                    <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,10"
+                                          IsVisible="{Binding IsExpanded}">
+                                        <Grid Grid.Column="0"
+                                              RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*"
+                                              ColumnDefinitions="Auto,*"
+                                              Margin="0,0,10,0">
+                                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                                       Text="Name:"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,10,0" />
+                                            <TextBox Grid.Row="0" Grid.Column="1"
+                                                     Text="{Binding Name}"
+                                                     Watermark="Sound Name"
+                                                     Margin="0,5" />
+
+                                            <TextBlock Grid.Row="1" Grid.Column="0"
+                                                       Text="Match Type:"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,10,0" />
+                                            <ComboBox Grid.Row="1" Grid.Column="1"
+                                                      ItemsSource="{Binding MatchTypes}"
+                                                      SelectedItem="{Binding SelectedMatchType}"
+                                                      Margin="0,5" />
+
+                                            <TextBlock Grid.Row="2" Grid.Column="0"
+                                                       Text="Category:"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,10,0" />
+                                            <TextBox Grid.Row="2" Grid.Column="1"
+                                                     Text="{Binding Category}"
+                                                     Watermark="Sound Category"
+                                                     Margin="0,5" />
+
+                                            <TextBlock Grid.Row="3" Grid.Column="0"
+                                                       Text="Volume:"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,10,0" />
+                                            <Grid Grid.Row="3" Grid.Column="1"
+                                                  ColumnDefinitions="Auto,*"
+                                                  Margin="0,5">
+                                                <NumericUpDown Grid.Column="0"
+                                                               Value="{Binding Volume}"
+                                                               Increment="0.05"
+                                                               Minimum="0"
+                                                               Maximum="3"
+                                                               Width="75"
+                                                               FormatString="P0"
+                                                               Margin="0,0,5,0" />
+                                                <Slider Grid.Column="1"
+                                                        Minimum="0.0"
+                                                        Maximum="3.0"
+                                                        Value="{Binding Volume}"
+                                                        TickFrequency="0.05"
+                                                        TickPlacement="BottomRight"
+                                                        IsSnapToTickEnabled="True" />
+                                            </Grid>
+
+                                            <TextBlock Grid.Row="4" Grid.Column="0"
+                                                       Text="Play Chance:"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,10,0" />
+                                            <Grid Grid.Row="4" Grid.Column="1"
+                                                  ColumnDefinitions="Auto,*"
+                                                  Margin="0,5">
+                                                <NumericUpDown Grid.Column="0"
+                                                               Value="{Binding PlayChance}"
+                                                               Increment="0.05"
+                                                               Minimum="0"
+                                                               Maximum="1"
+                                                               Width="75"
+                                                               FormatString="P0"
+                                                               Margin="0,0,5,0" />
+                                                <Slider Grid.Column="1"
+                                                        Value="{Binding PlayChance}"
+                                                        Minimum="0.0"
+                                                        Maximum="1.0"
+                                                        TickFrequency="0.05"
+                                                        TickPlacement="BottomRight"
+                                                        IsSnapToTickEnabled="True" />
+                                            </Grid>
+
+                                            <TextBlock Grid.Row="5" Grid.Column="0"
+                                                       Text="Sound Files:"
+                                                       VerticalAlignment="Top"
+                                                       Margin="0,5,10,0" />
+                                            <Grid Grid.Row="5" Grid.Column="1"
+                                                  RowDefinitions="Auto,*"
+                                                  Margin="0,5">
+                                                <Grid Grid.Row="0"
+                                                      ColumnDefinitions="*,180,100"
+                                                      Margin="0,2">
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="File Name"
+                                                               FontWeight="Bold" />
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="Percentage"
+                                                               FontWeight="Bold"
+                                                               Margin="5,0"
+                                                               TextAlignment="Center" />
+                                                    <TextBlock Grid.Column="2"
+                                                               Text="Actions"
+                                                               FontWeight="Bold"
+                                                               Margin="5,0"
+                                                               TextAlignment="Center" />
+                                                </Grid>
+
+                                                <ItemsControl Grid.Row="1"
+                                                              ItemsSource="{Binding SoundFiles}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid ColumnDefinitions="*,Auto,100"
+                                                                  Margin="2">
+                                                                <TextBlock Grid.Column="0"
+                                                                           Text="{Binding FileName}"
+                                                                           VerticalAlignment="Center" />
+                                                                <Grid Grid.Column="1"
+                                                                      ColumnDefinitions="Auto,*"
+                                                                      Margin="0,5">
+                                                                    <NumericUpDown Grid.Column="0"
+                                                                        Value="{Binding Percentage}"
+                                                                        Increment="0.05"
+                                                                        Minimum="0"
+                                                                        Maximum="1"
+                                                                        Width="60"
+                                                                        ShowButtonSpinner="False"
+                                                                        FormatString="P0"
+                                                                        TextAlignment="Center"
+                                                                        Margin="0,0,5,0" />
+                                                                    <Slider Grid.Column="1"
+                                                                            Value="{Binding Percentage}"
+                                                                            TickFrequency="0.05"
+                                                                            Minimum="0.0"
+                                                                            Maximum="1.0"
+                                                                            VerticalAlignment="Center"
+                                                                            TickPlacement="None"
+                                                                            Width="120"
+                                                                            IsSnapToTickEnabled="True" />
+                                                                </Grid>
+                                                                <Button Grid.Column="2"
+                                                                        Content="Remove"
+                                                                        Command="{Binding ((viewModels:DashboardViewModel)DataContext).RemoveSoundFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                        CommandParameter="{Binding}"
+                                                                        Margin="2" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </Grid>
+
+                                            <Button Grid.Row="6" Grid.Column="1"
+                                                    Content="Add Sound File"
+                                                    Command="{Binding ((viewModels:DashboardViewModel)DataContext).AddSoundFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Margin="0,5,0,0" />
+                                        </Grid>
+                                    </Grid>
                                 </Grid>
-                            </Expander>
+                                <ToggleButton x:Name="ExpanderToggle"
+                                              Content="{Binding IsExpanded, Converter={StaticResource BoolToDirectionConverter}}"
+                                              Margin="10 0 0 0"
+                                              HorizontalAlignment="Stretch"
+                                              VerticalAlignment="Stretch"
+                                              Background="#3d3e42"
+                                              IsChecked="{Binding IsExpanded, Mode=TwoWay}" />
+                            </StackPanel>
                         </Border>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>

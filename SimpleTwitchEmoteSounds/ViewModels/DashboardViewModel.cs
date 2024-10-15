@@ -340,6 +340,12 @@ public partial class DashboardViewModel : ViewModelBase
         ResetState();
     }
 
+    [RelayCommand]
+    private void ToggleSound(SoundCommand soundCommand)
+    {
+        soundCommand.Enabled = !soundCommand.Enabled;
+    }
+
     private void ResetState()
     {
         IsListening = false;
