@@ -30,10 +30,20 @@
                             Foreground="{Binding EnabledButtonColor}"
                             Content="{Binding IsEnabled, Converter={StaticResource BoolToEnabledDisabledConverter}}"
                             Margin="10,0,0,0"
+                            ToolTip.Tip="This is a quick way to enable or disable all sounds at once"
+                            ToolTip.Placement="Bottom"
                             Width="120" />
                     <Button Content="{Binding ToggleButtonText}"
                             Command="{Binding ToggleListeningCommand}"
                             HorizontalAlignment="Center"
+                            ToolTip.Tip="Click to reassign the hotkey"
+                            ToolTip.Placement="Bottom"
+                            Margin="10,0,0,0" />
+                    <Button Content="{Binding UpdateButtonText}"
+                            Command="{Binding UpdateButtonCommand}"
+                            HorizontalAlignment="Center"
+                            ToolTip.Tip="Click to check for updates"
+                            ToolTip.Placement="Bottom"
                             Margin="10,0,0,0" />
                 </StackPanel>
             </DockPanel>

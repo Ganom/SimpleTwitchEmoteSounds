@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -32,6 +33,7 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private bool _isEnabled = true;
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private string _toggleButtonText = "Register Hotkey";
+    [ObservableProperty] private string _updateButtonText = "v1.2.0";
     [ObservableProperty] private bool _isListening;
     private static Hotkey ToggleHotkey => ConfigService.Settings.EnableHotkey;
     private static ObservableCollection<SoundCommand> SoundCommands => ConfigService.Settings.SoundCommands;
@@ -199,6 +201,16 @@ public partial class DashboardViewModel : ViewModelBase
     private void ToggleSound(SoundCommand soundCommand)
     {
         soundCommand.Enabled = !soundCommand.Enabled;
+    }
+
+    [RelayCommand]
+    private void UpdateButton()
+    {
+        const string url = "https://github.com/Ganom/SimpleTwitchEmoteSounds/releases";
+        Process.Start(new ProcessStartInfo(url)
+        {
+            UseShellExecute = true
+        });
     }
 
     partial void OnUsernameChanged(string value)
