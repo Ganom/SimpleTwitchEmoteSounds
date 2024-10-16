@@ -33,7 +33,7 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private bool _isEnabled = true;
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private string _toggleButtonText = "Register Hotkey";
-    [ObservableProperty] private string _updateButtonText = "v1.2.0";
+    [ObservableProperty] private string _updateButtonText = "v1.2.1";
     [ObservableProperty] private bool _isListening;
     private static Hotkey ToggleHotkey => ConfigService.Settings.EnableHotkey;
     private static ObservableCollection<SoundCommand> SoundCommands => ConfigService.Settings.SoundCommands;
@@ -251,6 +251,7 @@ public partial class DashboardViewModel : ViewModelBase
                 {
                     MatchType.Equals => msg.Content.Trim().Equals(name),
                     MatchType.StartsWith => msg.Content.Trim().StartsWith(name),
+                    MatchType.StartsWithWord => msg.Content.Trim().Split(' ')[0].Equals(name.Trim()),
                     MatchType.ContainsWord => Regex.IsMatch(msg.Content, $@"\b{Regex.Escape(name)}\b"),
                     _ => throw new ArgumentOutOfRangeException()
                 };

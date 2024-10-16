@@ -36,5 +36,6 @@ public enum MatchType
 {
     Equals,
     StartsWith,
+    StartsWithWord,
     ContainsWord
 }
