@@ -1,0 +1,268 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+          content="Simple Twitch Emote Sounds - An easy-to-use sound trigger application for Twitch streamers">
+    <title>Simple Twitch Emote Sounds</title>
+    <style>
+        :root {
+            --primary-color: #9147ff;
+            --secondary-color: #bf94ff;
+            --text-color: #e0e0e0;
+            --bg-color: #0e0e10;
+            --card-bg: #18181b;
+            --code-bg: #2d2d32;
+            --hover-color: #772ce8;
+        }
+
+        body {
+            font-size: 1.3rem;
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: var(--bg-color);
+        }
+
+        .header {
+            text-align: center;
+            padding: 2rem 0;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: var(--secondary-color);
+            filter: drop-shadow(2px 2px black)
+        }
+
+        h2, h3 {
+            color: var(--secondary-color);
+        }
+
+        .emoji {
+            font-size: 1.5em;
+            margin-right: 0.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            border: 1px solid #2d2d32;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin: 1rem 0;
+            border: 1px solid #2d2d32;
+        }
+
+        .nav {
+            margin: 2rem 0;
+            padding: 1rem;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            border: 1px solid #2d2d32;
+        }
+
+        .nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .nav a:hover {
+            color: var(--hover-color);
+            text-decoration: underline;
+        }
+
+        code {
+            background: var(--code-bg);
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--hover-color);
+            text-decoration: underline;
+        }
+
+        ul {
+            padding-left: 1.5rem;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--hover-color);
+        }
+
+        .download-section {
+            text-align: center;
+            margin: -1rem 0 2rem 0;
+            padding: 1rem;
+        }
+
+        .download-button {
+            display: inline-flex;
+            align-items: center;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .download-button:hover {
+            background: var(--hover-color);
+            text-decoration: none;
+            color: white;
+        }
+
+        .download-button svg {
+            margin-right: 0.5rem;
+            width: 1.2em;
+            height: 1.2em;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>🐮 Simple Twitch Emote Sounds</h1>
+    <p>Quick and easy sound triggers for Twitch streamers</p>
+</div>
+
+<div class="download-section">
+    <a href="https://github.com/Ganom/SimpleTwitchEmoteSounds/releases/latest" class="download-button">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Download Latest Release
+    </a>
+</div>
+
+<div class="nav">
+    <h2>📑 Quick Navigation</h2>
+    <ul>
+        <li><a href="#setup">🚀 Quick Setup Guide</a></li>
+        <li><a href="#what-is">🤔 What is an Emote Sound?</a></li>
+        <li><a href="#why">❔ Why do that?</a></li>
+        <li><a href="#categories">📁 What do categories do?</a></li>
+        <li><a href="#customizing">💅 Customizing</a></li>
+        <li><a href="#example">🔊 Multi-sound trigger example</a></li>
+    </ul>
+</div>
+
+<div class="card" id="setup">
+    <h2>🚀 Quick Setup Guide</h2>
+    <ol>
+        <li>After launching the app, locate the username field in the top left corner</li>
+        <li>Enter your Twitch username and click the <code>Connect</code> button</li>
+        <li>Click the <code>Add New Sound</code> button to create your first sound trigger</li>
+        <li>When prompted, enter the name for your trigger (this is what chat will type to activate it)</li>
+        <li>Click <code>OK</code> to confirm the trigger name</li>
+        <li>Select your sound file when the file picker opens</li>
+        <li>That's it! Try typing your trigger word in chat to test it out</li>
+    </ol>
+    <p>Once connected, the app will automatically remember your username for next time. You can add as many sound
+        triggers as you'd like by repeating steps 3-6.</p>
+</div>
+
+<div class="card" id="what-is">
+    <h2>🤔 What is an Emote Sound?</h2>
+    <p>Emote sounds are triggered when a user types a certain phrase into Twitch chat, playing a sound effect. For
+        example, if there is a sound for the word <code>hiii</code> and the user types <code>hiii hello streamer</code>,
+        it will trigger the sound set for <code>hiii</code>.</p>
+</div>
+
+<div class="card" id="why">
+    <h2>❔ Why do that?</h2>
+    <p>It is a fun way for chatters to directly interact with the stream. The emotes/phrases are typically associated
+        with an emotion or response. For example, <code>no</code> or <code>yes</code> sounds, or <code>xdx</code> being
+        a trolling/gremlin response.</p>
+</div>
+
+<div class="card" id="categories">
+    <h2>📁 What do categories do?</h2>
+    <p>Categories exist solely for organization currently, in the future they may be expanded to have toggle hotkeys or
+        exclusive hotkeys.</p>
+</div>
+
+<div class="card" id="customizing">
+    <h2>💅 Customizing</h2>
+    <p>The app allows you to upload as many sounds to a single phrase as you want. You can set the volume for each
+        phrase, but not for specific sounds. There is an option to change the play rate; say you want to only have a 20%
+        chance for a sound to trigger because you have a very active chat, this will allow you to throttle it.</p>
+    <p>You can also have multiple sounds in that trigger with different chances. Think sub alerts: you may want a
+        special unique sound that has a 1% chance.</p>
+    <p>A feature not prominently shown is that you can split the name of the trigger with a comma for multiple valid
+        phrases. For example, name:<code>hi,hii,hiii</code> would be a valid phrase for each of those words.</p>
+</div>
+
+<div class="card" id="example">
+    <h2>🔊 Can you show me an example of a multi-sound trigger?</h2>
+    <p>Sure! We'll do a plink multi-sound trigger using these sounds:</p>
+    <ul>
+        <li><a href="https://github.com/Ganom/SimpleTwitchEmoteSounds/raw/refs/heads/gh-pages/example/plink.mp3">plink</a>
+        </li>
+        <li><a href="https://github.com/Ganom/SimpleTwitchEmoteSounds/raw/refs/heads/gh-pages/example/plonk.mp3">plonk</a>
+        </li>
+    </ul>
+    <p>For the name, we'll set it to <code>plink</code>, then we press ok followed by ctrl-clicking both files plink and
+        plonk. Once it's created, we'll set the percentage to 50% and 50%. See the image below for how it should look.
+    </p>
+    <img src="https://raw.githubusercontent.com/Ganom/SimpleTwitchEmoteSounds/refs/heads/gh-pages/example/example-image.png"
+         alt="plink plonk example">
+</div>
+</body>
+</html>
