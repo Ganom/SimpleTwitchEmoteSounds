@@ -26,6 +26,13 @@ namespace SimpleTwitchEmoteSounds.ViewModels;
 
 public partial class DashboardViewModel : ViewModelBase
 {
+    private static readonly string postfixInstalledIndicator =
+        #if CUSTOM_FEATURE_INSTALLED
+        "-installed";
+        #else
+        "-portable";
+        #endif
+
     [ObservableProperty] private string _username = ConfigService.State.Username;
     [ObservableProperty] private bool _isConnected;
     [ObservableProperty] private string _connectButtonText = "Connect";
@@ -33,7 +40,7 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private bool _isEnabled = true;
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private string _toggleButtonText = "Register Hotkey";
-    [ObservableProperty] private string _updateButtonText = "v1.3.0";
+    [ObservableProperty] private string _updateButtonText = "v1.3.0" + postfixInstalledIndicator;
     [ObservableProperty] private bool _isListening;
     private static Hotkey ToggleHotkey => ConfigService.Settings.EnableHotkey;
     private static ObservableCollection<SoundCommand> SoundCommands => ConfigService.Settings.SoundCommands;
