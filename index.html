@@ -3,10 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <meta name="description"
-          content="Simple Twitch Emote Sounds - An easy-to-use sound trigger application for Twitch streamers">
-    <meta name="google-site-verification" content="3Zkgkj5NUkVNDWe4wnIBoejTYIy8IK1vktAnl7kVHAk" />
-    <title>Simple Twitch Emote Sounds</title>
+          content="Simple Twitch Emote Sounds - A free tool for Twitch streamers to add custom sound effects triggered by chat messages. Easy setup, multiple sound support, customizable trigger rates, and viewable stats.">
+    <meta name="keywords"
+          content="twitch sounds, twitch chat sounds, stream sound effects, twitch emote sounds, twitch streaming tools">
+    <meta name="author" content="Ganom">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph tags -->
+    <meta property="og:title" content="Simple Twitch Emote Sounds - Chat Sound Triggers for Streamers">
+    <meta property="og:description"
+          content="Add custom sound effects to your Twitch stream, triggered by chat messages. Free tool for streamers with easy setup.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ganom.github.io/SimpleTwitchEmoteSounds/">
+
+    <!-- Twitter Card tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Simple Twitch Emote Sounds">
+    <meta name="twitter:description"
+          content="Add custom sound effects to your Twitch stream, triggered by chat messages. Free tool for streamers.">
+
+    <title>Simple Twitch Emote Sounds - Chat Sound Triggers for Twitch Streamers</title>
+
     <style>
         :root {
             --primary-color: #9147ff;
@@ -36,6 +55,12 @@
             color: white;
             border-radius: 8px;
             margin-bottom: 2rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 2rem;
         }
 
         h1 {
@@ -180,90 +205,106 @@
     <p>Quick and easy sound triggers for Twitch streamers</p>
 </div>
 
-<div class="download-section">
-    <a href="https://github.com/Ganom/SimpleTwitchEmoteSounds/releases/latest" class="download-button">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        Download Latest Release
-    </a>
-</div>
+<main>
+    <section class="download-section">
+        <a href="https://github.com/Ganom/SimpleTwitchEmoteSounds/releases/latest" class="download-button">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download Latest Release
+        </a>
+    </section>
 
-<div class="nav">
-    <h2>📑 Quick Navigation</h2>
-    <ul>
-        <li><a href="#setup">🚀 Quick Setup Guide</a></li>
-        <li><a href="#what-is">🤔 What is an Emote Sound?</a></li>
-        <li><a href="#why">❔ Why do that?</a></li>
-        <li><a href="#categories">📁 What do categories do?</a></li>
-        <li><a href="#customizing">💅 Customizing</a></li>
-        <li><a href="#example">🔊 Multi-sound trigger example</a></li>
-    </ul>
-</div>
+    <nav class="nav">
+        <h2>📑 Quick Navigation</h2>
+        <ul>
+            <li><a href="#setup">🚀 Quick Setup Guide</a></li>
+            <li><a href="#what-is">🤔 What is an Emote Sound?</a></li>
+            <li><a href="#why">❔ Why do that?</a></li>
+            <li><a href="#categories">📁 What do categories do?</a></li>
+            <li><a href="#customizing">💅 Customizing</a></li>
+            <li><a href="#example">🔊 Multi-sound trigger example</a></li>
+        </ul>
+    </nav>
 
-<div class="card" id="setup">
-    <h2>🚀 Quick Setup Guide</h2>
-    <ol>
-        <li>After launching the app, locate the username field in the top left corner</li>
-        <li>Enter your Twitch username and click the <code>Connect</code> button</li>
-        <li>Click the <code>Add New Sound</code> button to create your first sound trigger</li>
-        <li>When prompted, enter the name for your trigger (this is what chat will type to activate it)</li>
-        <li>Click <code>OK</code> to confirm the trigger name</li>
-        <li>Select your sound file when the file picker opens</li>
-        <li>That's it! Try typing your trigger word in chat to test it out</li>
-    </ol>
-    <p>Once connected, the app will automatically remember your username for next time. You can add as many sound
-        triggers as you'd like by repeating steps 3-6.</p>
-</div>
+    <section class="card" id="setup">
+        <h2>🚀 Quick Setup Guide</h2>
+        <ol>
+            <li>After launching the app, locate the username field in the top left corner</li>
+            <li>Enter your Twitch username and click the <code>Connect</code> button</li>
+            <li>Click the <code>Add New Sound</code> button to create your first sound trigger</li>
+            <li>When prompted, enter the name for your trigger (this is what chat will type to activate it)</li>
+            <li>Click <code>OK</code> to confirm the trigger name</li>
+            <li>Select your sound file when the file picker opens</li>
+            <li>That's it! Try typing your trigger word in chat to test it out</li>
+        </ol>
+        <p>Once connected, the app will automatically remember your username for next time. You can add as many sound
+            triggers as you'd like by repeating steps 3-6.</p>
+    </section>
 
-<div class="card" id="what-is">
-    <h2>🤔 What is an Emote Sound?</h2>
-    <p>Emote sounds are triggered when a user types a certain phrase into Twitch chat, playing a sound effect. For
-        example, if there is a sound for the word <code>hiii</code> and the user types <code>hiii hello streamer</code>,
-        it will trigger the sound set for <code>hiii</code>.</p>
-</div>
+    <section class="card" id="what-is">
+        <h2>🤔 What is an Emote Sound?</h2>
+        <p>Emote sounds are triggered when a user types a certain phrase into Twitch chat, playing a sound effect. For
+            example, if there is a sound for the word <code>hiii</code> and the user types <code>hiii hello
+                streamer</code>,
+            it will trigger the sound set for <code>hiii</code>.</p>
+    </section>
 
-<div class="card" id="why">
-    <h2>❔ Why do that?</h2>
-    <p>It is a fun way for chatters to directly interact with the stream. The emotes/phrases are typically associated
-        with an emotion or response. For example, <code>no</code> or <code>yes</code> sounds, or <code>xdx</code> being
-        a trolling/gremlin response.</p>
-</div>
+    <section class="card" id="why">
+        <h2>❔ Why do that?</h2>
+        <p>It is a fun way for chatters to directly interact with the stream. The emotes/phrases are typically
+            associated
+            with an emotion or response. For example, <code>no</code> or <code>yes</code> sounds, or <code>xdx</code>
+            being
+            a trolling/gremlin response.</p>
+    </section>
 
-<div class="card" id="categories">
-    <h2>📁 What do categories do?</h2>
-    <p>Categories exist solely for organization currently, in the future they may be expanded to have toggle hotkeys or
-        exclusive hotkeys.</p>
-</div>
+    <section class="card" id="categories">
+        <h2>📁 What do categories do?</h2>
+        <p>Categories exist solely for organization currently, in the future they may be expanded to have toggle hotkeys
+            or
+            exclusive hotkeys.</p>
+    </section>
 
-<div class="card" id="customizing">
-    <h2>💅 Customizing</h2>
-    <p>The app allows you to upload as many sounds to a single phrase as you want. You can set the volume for each
-        phrase, but not for specific sounds. There is an option to change the play rate; say you want to only have a 20%
-        chance for a sound to trigger because you have a very active chat, this will allow you to throttle it.</p>
-    <p>You can also have multiple sounds in that trigger with different chances. Think sub alerts: you may want a
-        special unique sound that has a 1% chance.</p>
-    <p>A feature not prominently shown is that you can split the name of the trigger with a comma for multiple valid
-        phrases. For example, name:<code>hi,hii,hiii</code> would be a valid phrase for each of those words.</p>
-</div>
+    <section class="card" id="customizing">
+        <h2>💅 Customizing</h2>
+        <p>The app allows you to upload as many sounds to a single phrase as you want. You can set the volume for each
+            phrase, but not for specific sounds. There is an option to change the play rate; say you want to only have a
+            20%
+            chance for a sound to trigger because you have a very active chat, this will allow you to throttle it.</p>
+        <p>You can also have multiple sounds in that trigger with different chances. Think sub alerts: you may want a
+            special unique sound that has a 1% chance.</p>
+        <p>A feature not prominently shown is that you can split the name of the trigger with a comma for multiple valid
+            phrases. For example, name:<code>hi,hii,hiii</code> would be a valid phrase for each of those words.</p>
+    </section>
 
-<div class="card" id="example">
-    <h2>🔊 Can you show me an example of a multi-sound trigger?</h2>
-    <p>Sure! We'll do a plink multi-sound trigger using these sounds:</p>
-    <ul>
-        <li><a href="https://github.com/Ganom/SimpleTwitchEmoteSounds/raw/refs/heads/gh-pages/example/plink.mp3">plink</a>
-        </li>
-        <li><a href="https://github.com/Ganom/SimpleTwitchEmoteSounds/raw/refs/heads/gh-pages/example/plonk.mp3">plonk</a>
-        </li>
-    </ul>
-    <p>For the name, we'll set it to <code>plink</code>, then we press ok followed by ctrl-clicking both files plink and
-        plonk. Once it's created, we'll set the percentage to 50% and 50%. See the image below for how it should look.
-    </p>
-    <img src="https://raw.githubusercontent.com/Ganom/SimpleTwitchEmoteSounds/refs/heads/gh-pages/example/example-image.png"
-         alt="plink plonk example">
-</div>
+    <section class="card" id="example">
+        <h2>🔊 Can you show me an example of a multi-sound trigger?</h2>
+        <p>Sure! We'll do a plink multi-sound trigger using these sounds:</p>
+        <ul>
+            <li>
+                <a href="https://github.com/Ganom/SimpleTwitchEmoteSounds/raw/refs/heads/gh-pages/example/plink.mp3">plink</a>
+            </li>
+            <li>
+                <a href="https://github.com/Ganom/SimpleTwitchEmoteSounds/raw/refs/heads/gh-pages/example/plonk.mp3">plonk</a>
+            </li>
+        </ul>
+        <p>For the name, we'll set it to <code>plink</code>, then we press ok followed by ctrl-clicking both files plink
+            and
+            plonk. Once it's created, we'll set the percentage to 50% and 50%. See the image below for how it should
+            look.
+        </p>
+        <img src="https://raw.githubusercontent.com/Ganom/SimpleTwitchEmoteSounds/refs/heads/gh-pages/example/example-image.png"
+             alt="plink plonk example">
+    </section>
+</main>
+
+<footer>
+    <p>Created by <a href="https://github.com/Ganom">Ganom</a></p>
+</footer>
 </body>
 </html>
