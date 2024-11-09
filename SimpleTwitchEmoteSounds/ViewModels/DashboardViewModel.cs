@@ -33,7 +33,7 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private bool _isEnabled = true;
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private string _toggleButtonText = "Register Hotkey";
-    [ObservableProperty] private string _updateButtonText = "v1.2.1";
+    [ObservableProperty] private string _updateButtonText = "v1.3.0";
     [ObservableProperty] private bool _isListening;
     private static Hotkey ToggleHotkey => ConfigService.Settings.EnableHotkey;
     private static ObservableCollection<SoundCommand> SoundCommands => ConfigService.Settings.SoundCommands;
@@ -213,6 +213,16 @@ public partial class DashboardViewModel : ViewModelBase
         });
     }
 
+    [RelayCommand]
+    private async Task ViewSoundCommandStats()
+    {
+        var dialog = new SoundStatsDialogView
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        await dialog.ShowDialog(GetMainWindow());
+    }
+
     partial void OnUsernameChanged(string value)
     {
         ConfigService.State.Username = value;
@@ -241,7 +251,7 @@ public partial class DashboardViewModel : ViewModelBase
         {
             if (!soundCommand.Enabled)
             {
-                Log.Information($"Sound command '{soundCommand.Name}' is disabled. Skipping.");
+                Log.Debug($"Sound command '{soundCommand.Name}' is disabled. Skipping.");
                 continue;
             }
 
@@ -263,17 +273,17 @@ public partial class DashboardViewModel : ViewModelBase
             }
 
             var shouldPlay = ShouldPlaySound(float.Parse(soundCommand.PlayChance));
-            Log.Information(
+            Log.Debug(
                 $"Command '{soundCommand.Name}' matched. Play chance: {soundCommand.PlayChance}%. Should play: {shouldPlay}");
 
             if (!shouldPlay)
             {
-                Log.Information(
+                Log.Debug(
                     $"Command '{soundCommand.Name}' matched but didn't pass the play chance check. Continuing to next command.");
                 continue;
             }
 
-            Log.Information($"Playing sound for command: {soundCommand.Name}");
+            Log.Debug($"Playing sound for command: {soundCommand.Name}");
             await AudioService.PlaySound(soundCommand);
             break;
         }
@@ -283,7 +293,7 @@ public partial class DashboardViewModel : ViewModelBase
     {
         var randomValue = (float)Random.Shared.NextDouble();
         var shouldPlay = randomValue <= playChance;
-        Log.Information(
+        Log.Debug(
             $"Play chance check: Random value: {randomValue:F4}, Play chance: {playChance:F4}, Should play: {shouldPlay}");
         return shouldPlay;
     }

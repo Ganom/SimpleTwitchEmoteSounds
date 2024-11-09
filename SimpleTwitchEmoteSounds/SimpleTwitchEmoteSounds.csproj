@@ -6,7 +6,7 @@
 		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-		<Version>1.0.0.0</Version>
+		<Version>1.3.0</Version>
 		<Title>SimpleTwitchEmoteSounds</Title>
 		<Authors>GanomSoftware</Authors>
 		<Description>Plays sounds based on user setup commands when interfacing with Twitch.TV</Description>
@@ -22,22 +22,24 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Avalonia" Version="11.2.0-rc1" />
-		<PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.3" />
-		<PackageReference Include="Avalonia.Desktop" Version="11.2.0-rc1" />
-		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.0-rc1" />
-		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.0-rc1" />
+		<PackageReference Include="Avalonia" Version="11.2.0" />
+		<PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.4" />
+		<PackageReference Include="Avalonia.Desktop" Version="11.2.0" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.0" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.0" />
 		<!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.0-rc1" />
-		<PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.1.0.4" />
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
-		<PackageReference Include="MessageBox.Avalonia" Version="3.1.6" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0-rc.1.24431.7" />
-		<PackageReference Include="MiniTwitch.Irc" Version="1.2.16" />
+		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.0" />
+		<PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.2.0" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0-preview1" />
+		<PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.0.0-rc4.5" />
+		<PackageReference Include="MessageBox.Avalonia" Version="3.2.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0-rc.2.24473.5" />
+		<PackageReference Include="MiniTwitch.Irc" Version="1.3.0" />
 		<PackageReference Include="NAudio" Version="2.2.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="Semi.Avalonia" Version="11.2.0-beta1" />
-		<PackageReference Include="Serilog" Version="4.0.2-dev-02226" />
+		<PackageReference Include="Semi.Avalonia" Version="11.2.0" />
+		<PackageReference Include="Semi.Avalonia.DataGrid" Version="11.2.0" />
+		<PackageReference Include="Serilog" Version="4.1.1-dev-02318" />
 		<PackageReference Include="Serilog.Expressions" Version="5.0.1-dev-00182" />
 		<PackageReference Include="Serilog.Extensions.Logging" Version="8.0.1-dev-10398" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
