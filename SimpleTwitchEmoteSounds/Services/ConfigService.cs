@@ -29,7 +29,7 @@ public static class ConfigService
         {
             Debouncer.Debounce("User Property Changed", () =>
             {
-                Log.Information("User Property Changed");
+                Log.Debug("User Property Changed");
                 SaveConfig("user_state", State);
             });
         };
@@ -37,7 +37,7 @@ public static class ConfigService
         {
             Debouncer.Debounce("Sound Prop Changed", () =>
             {
-                Log.Information("Sound Property Changed");
+                Log.Debug("Sound Property Changed");
                 SaveConfig("sounds", Settings);
             });
         };
@@ -45,7 +45,7 @@ public static class ConfigService
         {
             Debouncer.Debounce("Sound Collection Changed", () =>
             {
-                Log.Information("Sound Settings Collection Changed");
+                Log.Debug("Sound Settings Collection Changed");
                 SaveConfig("sounds", Settings);
             });
         };
@@ -53,7 +53,7 @@ public static class ConfigService
         {
             Debouncer.Debounce("Sound Property Changed", () =>
             {
-                Log.Information("Sound Property Changed");
+                Log.Debug("Sound Property Changed");
                 SaveConfig("sounds", Settings);
             });
         };
@@ -61,7 +61,7 @@ public static class ConfigService
         {
             Debouncer.Debounce("Sound Sub Collection Changed", () =>
             {
-                Log.Information("Sound Collection Changed");
+                Log.Debug("Sound Collection Changed");
                 SaveConfig("sounds", Settings);
             });
         };

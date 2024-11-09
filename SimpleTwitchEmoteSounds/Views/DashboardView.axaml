@@ -10,6 +10,7 @@
     <UserControl.Resources>
         <converters:BoolToEnabledDisabledConverter x:Key="BoolToEnabledDisabledConverter" />
         <converters:EnabledToBoxShadowConverter x:Key="EnabledToBoxShadowConverter" />
+        <converters:MissingSoundFilesTooltipConverter x:Key="MissingSoundFilesTooltipConverter" />
     </UserControl.Resources>
 
     <Grid RowDefinitions="Auto,*">
@@ -45,9 +46,13 @@
                             ToolTip.Tip="Click to check for updates"
                             ToolTip.Placement="Bottom"
                             Margin="10,0,0,0" />
+                    <Button Content="View Stats"
+                            Command="{Binding ViewSoundCommandStatsCommand}"
+                            HorizontalAlignment="Center"
+                            Margin="10,0,0,0" />
                 </StackPanel>
             </DockPanel>
-            <Grid ColumnDefinitions="*, Auto"
+            <Grid ColumnDefinitions="*,Auto"
                   Margin="20 10 20 10">
                 <TextBox Grid.Column="0"
                          Text="{Binding SearchText}"
@@ -77,10 +82,14 @@
                                     Padding="10"
                                     MinWidth="200"
                                     Name="Border"
-                                    HorizontalAlignment="Stretch">
+                                    HorizontalAlignment="Stretch"
+                                    ToolTip.Tip="{Binding IsMissingSoundFiles, Converter={StaticResource MissingSoundFilesTooltipConverter}}"
+                                    ToolTip.Placement="Bottom"
+                                    ToolTip.ShowDelay="0">
                                 <Border.BoxShadow>
                                     <MultiBinding Converter="{StaticResource EnabledToBoxShadowConverter}">
                                         <Binding Path="Enabled" />
+                                        <Binding Path="IsMissingSoundFiles" />
                                         <Binding Path="#Border.IsPointerOver"></Binding>
                                     </MultiBinding>
                                 </Border.BoxShadow>

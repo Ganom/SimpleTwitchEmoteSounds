@@ -39,7 +39,6 @@ public partial class AppSettings : ObservableObject
 
     private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        Console.WriteLine($"Property changed: {e.PropertyName}");
         SoundCommandPropertyChanged?.Invoke(sender, e);
     }
 

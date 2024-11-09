@@ -1,0 +1,55 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:SimpleTwitchEmoteSounds.ViewModels"
+        xmlns:i="using:Avalonia.Xaml.Interactivity"
+        xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
+        xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+        x:Class="SimpleTwitchEmoteSounds.Views.SoundStatsDialogView"
+        x:DataType="vm:SoundStatsDialogViewModel"
+        Title="Sound Stats"
+        Width="900"
+        Height="600">
+    <i:Interaction.Behaviors>
+        <ia:EventTriggerBehavior EventName="KeyDown">
+            <ia:InvokeCommandAction Command="{Binding KeyDownCommand}" PassEventArgsToCommand="True" />
+        </ia:EventTriggerBehavior>
+    </i:Interaction.Behaviors>
+
+    <Grid ColumnDefinitions="*, *">
+        <DataGrid Grid.Column="0"
+                  ItemsSource="{Binding SortedSoundCommands}"
+                  IsReadOnly="True"
+                  CanUserSortColumns="True"
+                  GridLinesVisibility="All"
+                  Margin="10">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Command"
+                                    Binding="{Binding DisplayName}"
+                                    Width="*" />
+                <DataGridTextColumn Header="Times Played"
+                                    Binding="{Binding TimesPlayed}"
+                                    Width="Auto" />
+                <DataGridTemplateColumn Header="Actions"
+                                        Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Reset"
+                                    Command="{Binding ((vm:SoundStatsDialogViewModel)DataContext).RefreshStatsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}"
+                                    Margin="20 5 20 5" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Border Grid.Column="1"
+                MinHeight="300"
+                MinWidth="300">
+            <lvc:PieChart Series="{Binding PieSeries}"/>
+        </Border>
+    </Grid>
+</Window>
