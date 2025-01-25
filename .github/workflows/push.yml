@@ -1,15 +1,31 @@
 name: Deploy
 
 on:
+  # Run CI when a new branch or tag is created
+  create:
+    # only run if the tag is a supported version tag
+    tags:
+      - "v*.*.*"
+  # Run CI when a new commit is pushed
   push:
     branches:
       - master
+  # Run CI on pull requests to any branch
+  pull_request:
+  # Run CI on manual request
+  workflow_dispatch:
 
 jobs:
   push-deploy:
-    runs-on: windows-latest
+    strategy:
+        matrix:
+          os: [windows-latest]
+    runs-on: ${{ matrix.os }}
     env:
       Project_Path: SimpleTwitchEmoteSounds/SimpleTwitchEmoteSounds.csproj
+      Output_Path: publish
+      Dotnet_Publish_Runtime: win-x64
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -20,10 +36,38 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Publish Application
-        run: dotnet publish ${{ env.Project_Path }} -c Release -o ./publish -r win-x64 -p:PublishSingleFile=true -p:DebugType=none -p:PublishReadyToRun=false -p:IncludeNativeLibrariesForSelfExtract=true --self-contained false
+        run: dotnet publish ${{ env.Project_Path }} -o ${{ env.Output_Path }} -r ${{ env.Dotnet_Publish_Runtime }} ${{ env.Dotnet_Publish_Options }}
+        env:
+          Dotnet_Publish_Options: -c Release -p:PublishSingleFile=true -p:DebugType=none -p:PublishReadyToRun=false -p:IncludeNativeLibrariesForSelfExtract=true --self-contained false
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SimpleTwitchEmoteSounds
-          path: ./publish
+          name: SimpleTwitchEmoteSounds-${{ env.Dotnet_Publish_Runtime }}
+          path: ${{ env.Output_Path }}
+  create-github-release:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    # Only create a GitHub release if a new tag was pushed that starts with v
+    # and if the build step was successful
+    needs: push-deploy
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: ./artifacts
+    # This downloads all build steps artifacts into the directory 'artifacts':
+    # - publish_win-x64/SimpleTwitchEmoteSounds.exe
+    # - ...
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: ./artifacts/**/*SimpleTwitchEmoteSounds*
+    # This creates a release for the current (new) version tag that includes:
+    # - all SimpleTwitchEmoteSounds.exe files from the artifacts directory
+    # - ...
