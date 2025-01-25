@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Serilog;
 
@@ -13,10 +14,18 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        var appLocation = AppDomain.CurrentDomain.BaseDirectory;
+        var logFolder = Path.Combine(appLocation, "Logs");
+        #if CUSTOM_FEATURE_INSTALLED
+        // On Windows this resolves to %AppData%\program (AppData\Roaming\program)
+        // On Linux this resolves to   ~/.config/program
+        logFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SimpleTwitchEmoteSounds", "Logs");
+        #endif
+
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
             .WriteTo.Console()
-            .WriteTo.File("Logs/stes-.txt", rollingInterval: RollingInterval.Day)
+            .WriteTo.File(Path.Combine(logFolder, "stes-.txt"), rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
         AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
