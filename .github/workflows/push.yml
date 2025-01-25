@@ -20,6 +20,7 @@ jobs:
     strategy:
         matrix:
           os: [windows-latest]
+          portable: [true, false]
     runs-on: ${{ matrix.os }}
     env:
       Project_Path: SimpleTwitchEmoteSounds/SimpleTwitchEmoteSounds.csproj
@@ -35,15 +36,22 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Publish Application
-        run: dotnet publish ${{ env.Project_Path }} -o ${{ env.Output_Path }} -r ${{ env.Dotnet_Publish_Runtime }} ${{ env.Dotnet_Publish_Options }}
+      - name: Publish Application (${{ matrix.portable && 'portable' || 'installed' }})
+        run: dotnet publish ${{ env.Project_Path }} -o ${{ env.Output_Path }} -r ${{ env.Dotnet_Publish_Runtime }} ${{ env.Dotnet_Publish_Options }} ${{ env.Dotnet_Publish_Options_DefineConstants }}
         env:
           Dotnet_Publish_Options: -c Release -p:PublishSingleFile=true -p:DebugType=none -p:PublishReadyToRun=false -p:IncludeNativeLibrariesForSelfExtract=true --self-contained false
+          Dotnet_Publish_Options_DefineConstants: ${{ matrix.portable == false && '-p:DefineConstants="CUSTOM_FEATURE_INSTALLED"' || '' }}
+
+      # makensis is installed per default on windows-latest GitHub Action runners
+      - name: Create NSIS Installer
+        if: startsWith(matrix.os, 'windows') && matrix.portable == false
+        run: makensis windows_installer.nsi
+        working-directory: nsis
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SimpleTwitchEmoteSounds-${{ env.Dotnet_Publish_Runtime }}
+          name: SimpleTwitchEmoteSounds-${{ env.Dotnet_Publish_Runtime }}-${{ matrix.portable && 'portable' || 'installed' }}
           path: ${{ env.Output_Path }}
   create-github-release:
     strategy:
@@ -62,8 +70,13 @@ jobs:
       with:
         path: ./artifacts
     # This downloads all build steps artifacts into the directory 'artifacts':
-    # - publish_win-x64/SimpleTwitchEmoteSounds.exe
+    # - SimpleTwitchEmoteSounds-win-x64-portable/SimpleTwitchEmoteSounds.exe
+    # - SimpleTwitchEmoteSounds-win-x64-installed/SimpleTwitchEmoteSounds.exe
     # - ...
+    - name: Remove unused files
+      # SimpleTwitchEmoteSounds.exe files would otherwise overwrite themselves
+      run: |
+        rm ./artifacts/SimpleTwitchEmoteSounds-win-x64-installed/SimpleTwitchEmoteSounds.exe
     - name: Release
       uses: softprops/action-gh-release@v2
       with:
