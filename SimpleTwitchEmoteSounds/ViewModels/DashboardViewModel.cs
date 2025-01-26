@@ -33,7 +33,7 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private bool _isEnabled = true;
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private string _toggleButtonText = "Register Hotkey";
-    [ObservableProperty] private string _updateButtonText = "v1.3.0";
+    [ObservableProperty] private string _updateButtonText = "v1.3.1";
     [ObservableProperty] private bool _isListening;
     private static Hotkey ToggleHotkey => ConfigService.Settings.EnableHotkey;
     private static ObservableCollection<SoundCommand> SoundCommands => ConfigService.Settings.SoundCommands;
