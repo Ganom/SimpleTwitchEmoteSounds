@@ -38,7 +38,7 @@
                     Margin="20"
                     Padding="10"
                     HorizontalAlignment="Stretch">
-                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*"
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
                       ColumnDefinitions="Auto,*"
                       Margin="0,0,10,0">
                     <TextBlock Grid.Row="0" Grid.Column="0"
@@ -115,12 +115,36 @@
                                 TickPlacement="BottomRight"
                                 IsSnapToTickEnabled="True" />
                     </Grid>
-
+                    
                     <TextBlock Grid.Row="5" Grid.Column="0"
+                               Text="Cooldown:"
+                               VerticalAlignment="Center"
+                               Margin="0,0,10,0" />
+                    <Grid Grid.Row="5" Grid.Column="1"
+                          ColumnDefinitions="Auto,*"
+                          Margin="0,5">
+                        <NumericUpDown Grid.Column="0"
+                                       Value="{Binding SoundCommand.CooldownSeconds}"
+                                       Increment="0.5"
+                                       Minimum="0"
+                                       Maximum="15"
+                                       Width="75"
+                                       FormatString="N1"
+                                       Margin="0,0,5,0" />
+                        <Slider Grid.Column="1"
+                                Value="{Binding SoundCommand.CooldownSeconds}"
+                                Minimum="0.0"
+                                Maximum="15.0"
+                                TickFrequency="0.5"
+                                TickPlacement="BottomRight"
+                                IsSnapToTickEnabled="True" />
+                    </Grid>
+
+                    <TextBlock Grid.Row="6" Grid.Column="0"
                                Text="Sound Files:"
                                VerticalAlignment="Top"
                                Margin="0,5,10,0" />
-                    <Grid Grid.Row="5" Grid.Column="1"
+                    <Grid Grid.Row="6" Grid.Column="1"
                           RowDefinitions="Auto,*"
                           Margin="0,5">
                         <Grid Grid.Row="0"

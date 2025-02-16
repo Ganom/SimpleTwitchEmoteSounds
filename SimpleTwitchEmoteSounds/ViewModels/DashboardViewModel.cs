@@ -33,7 +33,7 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private bool _isEnabled = true;
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private string _toggleButtonText = "Register Hotkey";
-    [ObservableProperty] private string _updateButtonText = "v1.3.1";
+    [ObservableProperty] private string _updateButtonText = "v1.3.2";
     [ObservableProperty] private bool _isListening;
     private static Hotkey ToggleHotkey => ConfigService.Settings.EnableHotkey;
     private static ObservableCollection<SoundCommand> SoundCommands => ConfigService.Settings.SoundCommands;
@@ -242,50 +242,64 @@ public partial class DashboardViewModel : ViewModelBase
 
     private async void TwitchServiceMessageLogged(Privmsg msg)
     {
-        if (!IsEnabled)
+        try
         {
-            return;
-        }
-
-        foreach (var soundCommand in SoundCommands)
-        {
-            if (!soundCommand.Enabled)
+            if (!IsEnabled)
             {
-                Log.Debug($"Sound command '{soundCommand.Name}' is disabled. Skipping.");
-                continue;
+                return;
             }
 
-            var isMatch = soundCommand.Names.Any(name =>
+            foreach (var soundCommand in SoundCommands)
             {
-                return soundCommand.SelectedMatchType switch
+                if (!soundCommand.Enabled)
                 {
-                    MatchType.Equals => msg.Content.Trim().Equals(name),
-                    MatchType.StartsWith => msg.Content.Trim().StartsWith(name),
-                    MatchType.StartsWithWord => msg.Content.Trim().Split(' ')[0].Equals(name.Trim()),
-                    MatchType.ContainsWord => Regex.IsMatch(msg.Content, $@"\b{Regex.Escape(name)}\b"),
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-            });
+                    Log.Debug($"Sound command '{soundCommand.Name}' is disabled. Skipping.");
+                    continue;
+                }
+                
+                if (soundCommand.IsOnCooldown)
+                {
+                    Log.Debug($"Sound command '{soundCommand.Name}' is on cooldown. Skipping.");
+                    continue;
+                }
 
-            if (!isMatch)
-            {
-                continue;
-            }
+                var isMatch = soundCommand.Names.Any(name =>
+                {
+                    return soundCommand.SelectedMatchType switch
+                    {
+                        MatchType.Equals => msg.Content.Trim().Equals(name),
+                        MatchType.StartsWith => msg.Content.Trim().StartsWith(name),
+                        MatchType.StartsWithWord => msg.Content.Trim().Split(' ')[0].Equals(name.Trim()),
+                        MatchType.ContainsWord => Regex.IsMatch(msg.Content, $@"\b{Regex.Escape(name)}\b"),
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+                });
 
-            var shouldPlay = ShouldPlaySound(float.Parse(soundCommand.PlayChance));
-            Log.Debug(
-                $"Command '{soundCommand.Name}' matched. Play chance: {soundCommand.PlayChance}%. Should play: {shouldPlay}");
+                if (!isMatch)
+                {
+                    continue;
+                }
 
-            if (!shouldPlay)
-            {
+                var shouldPlay = ShouldPlaySound(float.Parse(soundCommand.PlayChance));
                 Log.Debug(
-                    $"Command '{soundCommand.Name}' matched but didn't pass the play chance check. Continuing to next command.");
-                continue;
-            }
+                    $"Command '{soundCommand.Name}' matched. Play chance: {soundCommand.PlayChance}%. Should play: {shouldPlay}");
 
-            Log.Debug($"Playing sound for command: {soundCommand.Name}");
-            await AudioService.PlaySound(soundCommand);
-            break;
+                if (!shouldPlay)
+                {
+                    Log.Debug(
+                        $"Command '{soundCommand.Name}' matched but didn't pass the play chance check. Continuing to next command.");
+                    continue;
+                }
+
+                Log.Debug($"Playing sound for command: {soundCommand.Name}");
+                soundCommand.UpdateLastPlayedTime(); // Update the last played time
+                await AudioService.PlaySound(soundCommand);
+                break;
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Exception when attempting to play sound command, ");
         }
     }
 
