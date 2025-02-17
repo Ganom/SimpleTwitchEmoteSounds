@@ -292,7 +292,7 @@ public partial class DashboardViewModel : ViewModelBase
                 }
 
                 Log.Debug($"Playing sound for command: {soundCommand.Name}");
-                soundCommand.UpdateLastPlayedTime(); // Update the last played time
+                soundCommand.UpdateLastPlayedTime();
                 await AudioService.PlaySound(soundCommand);
                 break;
             }
