@@ -1,5 +1,9 @@
+#region
+
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +14,8 @@ using SharpHook.Data;
 using SimpleTwitchEmoteSounds.Data;
 using SimpleTwitchEmoteSounds.Data.Entities;
 using SimpleTwitchEmoteSounds.Models;
-using SharpHook.Native;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Services.Database;
 
@@ -22,24 +27,28 @@ public class DatabaseConfigService
     private readonly Timer _saveTimer;
     private bool _isDirty;
 
+    private readonly PropertyChangedEventHandler _markDirtyHandler;
+    private readonly NotifyCollectionChangedEventHandler _markDirtyCollectionHandler;
+
     public AppSettings Settings => _cachedSettings ??= LoadAppSettings();
     public UserState State => _cachedUserState ??= LoadUserState();
 
     public DatabaseConfigService(AppDbContext context)
     {
         _context = context;
-        
         _context.Database.EnsureCreated();
-
         _saveTimer = new Timer(SaveIfDirty, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+
+        _markDirtyHandler = (_, _) => MarkDirty();
+        _markDirtyCollectionHandler = (_, _) => MarkDirty();
 
         SubscribeToChanges();
     }
 
     private AppSettings LoadAppSettings()
     {
-        var entity = _context.AppSettings
-            .Include(a => a.SoundCommands)
+        var entity = _context
+            .AppSettings.Include(a => a.SoundCommands)
             .ThenInclude(sc => sc.SoundFiles)
             .FirstOrDefault();
 
@@ -51,7 +60,9 @@ public class DatabaseConfigService
 
         var settings = new AppSettings
         {
-            EnableHotkey = JsonConvert.DeserializeObject<Hotkey>(entity.EnableHotkeyData) ?? new Hotkey([KeyCode.VcF20]),
+            EnableHotkey =
+                JsonConvert.DeserializeObject<Hotkey>(entity.EnableHotkeyData)
+                ?? new Hotkey([KeyCode.VcF20]),
             SoundCommands = new ObservableCollection<SoundCommand>(
                 entity.SoundCommands.Select(sc => new SoundCommand
                 {
@@ -68,11 +79,11 @@ public class DatabaseConfigService
                         sc.SoundFiles.Select(sf => new SoundFile
                         {
                             FileName = sf.FileName,
-                            Percentage = sf.Percentage
+                            Percentage = sf.Percentage,
                         })
-                    )
+                    ),
                 })
-            )
+            ),
         };
 
         settings.RefreshSubscriptions();
@@ -94,7 +105,7 @@ public class DatabaseConfigService
             Height = entity.Height,
             Width = entity.Width,
             PosX = entity.PosX,
-            PosY = entity.PosY
+            PosY = entity.PosY,
         };
     }
 
@@ -114,30 +125,27 @@ public class DatabaseConfigService
     {
         UnsubscribeFromChanges();
 
-        Settings.PropertyChanged += (_, _) => MarkDirty();
-        Settings.CollectionChanged += (_, _) => MarkDirty();
-        Settings.SoundCommandPropertyChanged += (_, _) => MarkDirty();
-        Settings.SoundCommands.CollectionChanged += (_, _) => MarkDirty();
+        Settings.PropertyChanged += _markDirtyHandler;
+        Settings.CollectionChanged += _markDirtyCollectionHandler;
+        Settings.SoundCommandPropertyChanged += _markDirtyHandler;
+        Settings.SoundCommands.CollectionChanged += _markDirtyCollectionHandler;
 
-        State.PropertyChanged += (_, _) => MarkDirty();
+        State.PropertyChanged += _markDirtyHandler;
     }
 
     private void UnsubscribeFromChanges()
     {
         if (_cachedSettings != null)
         {
-            _cachedSettings.PropertyChanged -= (_, _) => MarkDirty();
-            _cachedSettings.CollectionChanged -= (_, _) => MarkDirty();
-            _cachedSettings.SoundCommandPropertyChanged -= (_, _) => MarkDirty();
-            if (_cachedSettings.SoundCommands != null)
-            {
-                _cachedSettings.SoundCommands.CollectionChanged -= (_, _) => MarkDirty();
-            }
+            _cachedSettings.PropertyChanged -= _markDirtyHandler;
+            _cachedSettings.CollectionChanged -= _markDirtyCollectionHandler;
+            _cachedSettings.SoundCommandPropertyChanged -= _markDirtyHandler;
+            _cachedSettings.SoundCommands.CollectionChanged -= _markDirtyCollectionHandler;
         }
 
         if (_cachedUserState != null)
         {
-            _cachedUserState.PropertyChanged -= (_, _) => MarkDirty();
+            _cachedUserState.PropertyChanged -= _markDirtyHandler;
         }
     }
 
@@ -150,7 +158,8 @@ public class DatabaseConfigService
     {
         try
         {
-            if (!_isDirty) return;
+            if (!_isDirty)
+                return;
 
             await SaveToDatabase();
             _isDirty = false;
@@ -171,30 +180,31 @@ public class DatabaseConfigService
 
     private async Task SaveAppSettings()
     {
-        var entity = await _context.AppSettings
-            .Include(a => a.SoundCommands)
+        var entity = await _context
+            .AppSettings.Include(a => a.SoundCommands)
             .ThenInclude(sc => sc.SoundFiles)
             .FirstOrDefaultAsync();
 
         if (entity == null)
         {
-            entity = new AppSettingsEntity
-            {
-                Id = 1
-            };
+            entity = new AppSettingsEntity { Id = 1 };
             _context.AppSettings.Add(entity);
         }
 
         entity.EnableHotkeyData = JsonConvert.SerializeObject(Settings.EnableHotkey);
 
-        var soundCommandsToRemove = entity.SoundCommands
-            .Where(ec => !Settings.SoundCommands.Any(sc => sc.Name == ec.Name && sc.Category == ec.Category))
+        var soundCommandsToRemove = entity
+            .SoundCommands.Where(ec =>
+                !Settings.SoundCommands.Any(sc => sc.Name == ec.Name && sc.Category == ec.Category)
+            )
             .ToList();
         _context.SoundCommands.RemoveRange(soundCommandsToRemove);
 
         foreach (var sc in Settings.SoundCommands)
         {
-            var existingCommand = entity.SoundCommands.FirstOrDefault(ec => ec.Name == sc.Name && ec.Category == sc.Category);
+            var existingCommand = entity.SoundCommands.FirstOrDefault(ec =>
+                ec.Name == sc.Name && ec.Category == sc.Category
+            );
 
             if (existingCommand != null)
             {
@@ -207,32 +217,38 @@ public class DatabaseConfigService
                 existingCommand.CooldownSeconds = sc.CooldownSeconds;
 
                 _context.SoundFiles.RemoveRange(existingCommand.SoundFiles);
-                existingCommand.SoundFiles = sc.SoundFiles.Select(sf => new SoundFileEntity
-                {
-                    FileName = sf.FileName,
-                    Percentage = sf.Percentage
-                }).ToList();
+                existingCommand.SoundFiles = sc
+                    .SoundFiles.Select(sf => new SoundFileEntity
+                    {
+                        FileName = sf.FileName,
+                        Percentage = sf.Percentage,
+                    })
+                    .ToList();
             }
             else
             {
-                entity.SoundCommands.Add(new SoundCommandEntity
-                {
-                    Name = sc.Name,
-                    Category = sc.Category,
-                    Enabled = sc.Enabled,
-                    IsExpanded = sc.IsExpanded,
-                    PlayChance = sc.PlayChance,
-                    SelectedMatchType = (int)sc.SelectedMatchType,
-                    Volume = sc.Volume,
-                    TimesPlayed = sc.TimesPlayed,
-                    CooldownSeconds = sc.CooldownSeconds,
-                    AppSettingsId = 1,
-                    SoundFiles = sc.SoundFiles.Select(sf => new SoundFileEntity
+                entity.SoundCommands.Add(
+                    new SoundCommandEntity
                     {
-                        FileName = sf.FileName,
-                        Percentage = sf.Percentage
-                    }).ToList()
-                });
+                        Name = sc.Name,
+                        Category = sc.Category,
+                        Enabled = sc.Enabled,
+                        IsExpanded = sc.IsExpanded,
+                        PlayChance = sc.PlayChance,
+                        SelectedMatchType = (int)sc.SelectedMatchType,
+                        Volume = sc.Volume,
+                        TimesPlayed = sc.TimesPlayed,
+                        CooldownSeconds = sc.CooldownSeconds,
+                        AppSettingsId = 1,
+                        SoundFiles = sc
+                            .SoundFiles.Select(sf => new SoundFileEntity
+                            {
+                                FileName = sf.FileName,
+                                Percentage = sf.Percentage,
+                            })
+                            .ToList(),
+                    }
+                );
             }
         }
     }
@@ -243,10 +259,7 @@ public class DatabaseConfigService
 
         if (entity == null)
         {
-            entity = new UserStateEntity
-            {
-                Id = 1
-            };
+            entity = new UserStateEntity { Id = 1 };
             _context.UserStates.Add(entity);
         }
 
@@ -259,7 +272,7 @@ public class DatabaseConfigService
 
     public async Task SaveAndShutdown()
     {
-        _saveTimer?.Dispose();
+        _saveTimer.Dispose();
         if (_isDirty)
         {
             await SaveToDatabase();
