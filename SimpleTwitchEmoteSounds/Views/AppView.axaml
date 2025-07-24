@@ -1,20 +1,94 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:viewModels="clr-namespace:SimpleTwitchEmoteSounds.ViewModels"
-        xmlns:views="clr-namespace:SimpleTwitchEmoteSounds.Views"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="SimpleTwitchEmoteSounds.Views.AppView"
-        x:DataType="viewModels:AppViewModel"
-        Icon="/Assets/cow.ico"
-        Title="Simple Twitch Emote Sounds">
+<suki:SukiWindow x:Class="SimpleTwitchEmoteSounds.Views.AppView"
+                 xmlns="https://github.com/avaloniaui"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+                 xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+                 xmlns:X="clr-namespace:SukiUI.Helpers.ConditionalXAML;assembly=SukiUI"
+                 xmlns:viewModels="clr-namespace:SimpleTwitchEmoteSounds.ViewModels"
+                 Title="Gnome TTS"
+                 x:DataType="viewModels:AppViewModel"
+                 Icon="/Assets/cow.ico"
+                 IsMenuVisible="True"
+                 BackgroundAnimationEnabled="False"
+                 BackgroundStyle="Flat">
 
-    <Window.DataTemplates>
-        <DataTemplate DataType="{x:Type viewModels:DashboardViewModel}">
-            <views:DashboardView />
-        </DataTemplate>
-    </Window.DataTemplates>
+    <suki:SukiWindow.MenuItems>
+        <!-- File Menu -->
+        <MenuItem Header="File">
+            <MenuItem Header="Open Logs Folder"
+                      Command="{Binding OpenLogsFolderCommand}">
+                <MenuItem.Icon>
+                    <avalonia:MaterialIcon Kind="FolderOpen" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Open Settings Folder"
+                      Command="{Binding OpenSettingsFolderCommand}">
+                <MenuItem.Icon>
+                    <avalonia:MaterialIcon Kind="SettingsBackupRestore" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator />
+            <MenuItem Header="Copy Latest Logs"
+                      Command="{Binding CopyLatestLogsToClipboardCommand}"
+                      InputGesture="Ctrl+Shift+C">
+                <MenuItem.Icon>
+                    <avalonia:MaterialIcon Kind="ContentCopy" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator />
+            <MenuItem Header="Exit"
+                      Command="{Binding ExitApplicationCommand}">
+                <MenuItem.Icon>
+                    <avalonia:MaterialIcon Kind="ExitToApp"
+                                           Foreground="{DynamicResource SukiDangerColor}" />
+                </MenuItem.Icon>
+            </MenuItem>
+        </MenuItem>
+
+        <!-- Help Menu -->
+        <MenuItem Header="Help">
+            <MenuItem Header="{Binding VersionButtonText}"
+                      Command="{Binding ShowUpdateInfoCommand}">
+                <MenuItem.Icon>
+                    <avalonia:MaterialIcon Kind="Update"
+                                           Foreground="{X:InlineSharp Expression='IsUpdateAvailable ? Brushes.Green : Brushes.White'}" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator />
+            <MenuItem Header="Get Support"
+                      Command="{Binding GetSupportCommand}">
+                <MenuItem.Icon>
+                    <avalonia:MaterialIcon Kind="MessageBadgeOutline" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator />
+            <MenuItem Header="About"
+                      Command="{Binding ShowAboutCommand}">
+                <MenuItem.Icon>
+                    <avalonia:MaterialIcon Kind="Information" />
+                </MenuItem.Icon>
+            </MenuItem>
+        </MenuItem>
+    </suki:SukiWindow.MenuItems>
+
+    <suki:SukiWindow.Hosts>
+        <suki:SukiToastHost Manager="{Binding ToastManager}" />
+        <suki:SukiDialogHost Manager="{Binding DialogManager}" />
+    </suki:SukiWindow.Hosts>
+
+    <suki:SukiWindow.LogoContent>
+        <avalonia:MaterialIcon Width="20"
+                               Height="20"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource SukiPrimaryColor}"
+                               Kind="TextToSpeech">
+            <avalonia:MaterialIcon.Transitions>
+                <Transitions>
+                    <BrushTransition Property="Foreground" Duration="{DynamicResource ShortAnimationDuration}" />
+                </Transitions>
+            </avalonia:MaterialIcon.Transitions>
+        </avalonia:MaterialIcon>
+    </suki:SukiWindow.LogoContent>
 
     <ContentControl Content="{Binding ActivePage}" />
-</Window>
+</suki:SukiWindow>
