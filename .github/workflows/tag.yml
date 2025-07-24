@@ -121,7 +121,7 @@ jobs:
 
       - name: Download Existing Velopack Releases (if any)
         run: |
-          vpk download github --repoUrl https://github.com/Ganom/SimpleTwitchEmoteSounds || echo "No existing releases found - this may be the first release"
+          vpk download github --repoUrl https://github.com/Ganom/SimpleTwitchEmoteSounds --token ${{ secrets.STES_TOKEN }} || echo "No existing releases found - this may be the first release"
 
       - name: Create Velopack Package
         run: |
