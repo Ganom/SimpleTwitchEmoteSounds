@@ -2,20 +2,20 @@
 using Avalonia;
 using Avalonia.Controls;
 using SimpleTwitchEmoteSounds.Models;
-using SimpleTwitchEmoteSounds.Services;
 using SimpleTwitchEmoteSounds.Services.Database;
 using Microsoft.Extensions.DependencyInjection;
+using SukiUI.Controls;
 
 namespace SimpleTwitchEmoteSounds.Views;
 
-public partial class AppView : Window
+public partial class AppView : SukiWindow
 {
     private readonly DatabaseConfigService _configService;
-    
+
     public AppView()
     {
         _configService = ((App)Application.Current!).Services!.GetRequiredService<DatabaseConfigService>();
-        
+
         InitializeComponent();
         Width = Settings.Width;
         Height = Settings.Height;

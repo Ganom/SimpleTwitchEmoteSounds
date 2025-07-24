@@ -3,34 +3,46 @@ using System;
 using System.Threading.Tasks;
 using Serilog;
 using SimpleTwitchEmoteSounds.Services;
+using SimpleTwitchEmoteSounds.Services.Core;
+using Velopack;
 
 namespace SimpleTwitchEmoteSounds;
 
-sealed class Program
+internal static class Program
 {
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
     [STAThread]
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
-        Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Information()
+        VelopackApp.Build().Run();
+
+        if (args.Length > 0 && args[0] == "--force-update")
+        {
+            await HandleForceUpdateAsync();
+            return;
+        }
+
+        var logConfig = new LoggerConfiguration();
+
+#if DEBUG
+        logConfig.MinimumLevel.Debug();
+#else
+        logConfig.MinimumLevel.Information();
+#endif
+
+        Log.Logger = logConfig
             .WriteTo.Console()
-            .WriteTo.File(AppDataPathService.GetLogFilePath("stes-.txt"), rollingInterval: RollingInterval.Day)
+            .WriteTo.File(
+                AppDataPathService.GetLogFilePath("chat-app-.txt"),
+                rollingInterval: RollingInterval.Day
+            )
             .CreateLogger();
 
         AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
         {
-            if (e.ExceptionObject is Exception ex)
-            {
-                Log.Fatal(ex, "Unhandled fatal exception");
-            }
-            else
-            {
-                Log.Fatal("Unhandled fatal exception of unknown type");
-            }
-
+            Log.Fatal(e.ExceptionObject as Exception, "AppDomain unhandled exception");
             Log.CloseAndFlush();
         };
 
@@ -42,12 +54,75 @@ sealed class Program
 
         try
         {
-            BuildAvaloniaApp()
-                .StartWithClassicDesktopLifetime(args);
+            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         catch (Exception ex)
         {
-            Log.Fatal(ex, "Application terminated unexpectedly");
+            Log.Fatal(ex, "Startup exception");
+        }
+        finally
+        {
+            Log.CloseAndFlush();
+        }
+    }
+
+    private static async Task HandleForceUpdateAsync()
+    {
+        var logConfig = new LoggerConfiguration();
+
+#if DEBUG
+        logConfig.MinimumLevel.Debug();
+#else
+        logConfig.MinimumLevel.Information();
+#endif
+
+        Log.Logger = logConfig
+            .WriteTo.Console()
+            .WriteTo.File(
+                AppDataPathService.GetLogFilePath("chat-app-update-.txt"),
+                rollingInterval: RollingInterval.Day
+            )
+            .CreateLogger();
+
+        try
+        {
+            Log.Information("Force update requested via command line");
+
+            var updateService = new UpdateService();
+
+            Log.Information("Checking for updates...");
+            await updateService.CheckForUpdatesAsync();
+
+            if (updateService is { IsUpdateAvailable: true, CurrentUpdateInfo: not null })
+            {
+                Log.Information("Update available, downloading...");
+                var downloadSuccess = await updateService.DownloadUpdateAsync(
+                    updateService.CurrentUpdateInfo
+                );
+
+                if (downloadSuccess)
+                {
+                    Log.Information("Update downloaded successfully, applying and restarting...");
+                    await updateService.ApplyUpdateAndRestart(updateService.CurrentUpdateInfo);
+                }
+                else
+                {
+                    Log.Error("Failed to download update");
+                    Environment.Exit(1);
+                }
+            }
+            else
+            {
+                Log.Information("No updates available");
+                Environment.Exit(0);
+            }
+
+            await updateService.DisposeAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Force update failed");
+            Environment.Exit(1);
         }
         finally
         {
@@ -58,9 +133,7 @@ sealed class Program
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()
     {
-        return AppBuilder.Configure<App>()
-            .UsePlatformDetect()
-            .WithInterFont()
-            .LogToTrace();
+        var app = AppBuilder.Configure<App>().UsePlatformDetect().WithInterFont().LogToTrace();
+        return app;
     }
 }

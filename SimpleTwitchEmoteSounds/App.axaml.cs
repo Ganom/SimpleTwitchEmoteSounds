@@ -13,10 +13,13 @@ using Serilog;
 using SimpleTwitchEmoteSounds.Common;
 using SimpleTwitchEmoteSounds.Data;
 using SimpleTwitchEmoteSounds.Services;
+using SimpleTwitchEmoteSounds.Services.Core;
 using SimpleTwitchEmoteSounds.Services.Database;
 using SimpleTwitchEmoteSounds.Services.Migration;
 using SimpleTwitchEmoteSounds.ViewModels;
 using SimpleTwitchEmoteSounds.Views;
+using SukiUI.Dialogs;
+using SukiUI.Toasts;
 
 namespace SimpleTwitchEmoteSounds;
 
@@ -93,6 +96,9 @@ public class App : Application
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite($"Data Source={dbPath}"));
 
+        services.AddSingleton<ISukiToastManager, SukiToastManager>();
+        services.AddSingleton<ISukiDialogManager, SukiDialogManager>();
+        services.AddSingleton<IUpdateService, UpdateService>();
         services.AddSingleton<DatabaseConfigService>();
         services.AddSingleton<JsonToDbMigrationService>();
         services.AddSingleton<PageNavigationService>();
