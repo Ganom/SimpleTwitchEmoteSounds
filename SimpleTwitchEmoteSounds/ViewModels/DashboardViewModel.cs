@@ -27,15 +27,24 @@ namespace SimpleTwitchEmoteSounds.ViewModels;
 
 public partial class DashboardViewModel : ViewModelBase
 {
-    [ObservableProperty] private string _username;
-    [ObservableProperty] private bool _isConnected;
-    [ObservableProperty] private string _connectButtonText = "Connect";
-    [ObservableProperty] private string _connectButtonColor = "white";
-    [ObservableProperty] private bool _isEnabled = true;
-    [ObservableProperty] private string _searchText = string.Empty;
-    [ObservableProperty] private string _toggleButtonText = "Register Hotkey";
-    [ObservableProperty] private string _updateButtonText = "v1.3.2";
-    [ObservableProperty] private bool _isListening;
+    [ObservableProperty]
+    private string _username;
+    [ObservableProperty]
+    private bool _isConnected;
+    [ObservableProperty]
+    private string _connectButtonText = "Connect";
+    [ObservableProperty]
+    private string _connectButtonColor = "white";
+    [ObservableProperty]
+    private bool _isEnabled = true;
+    [ObservableProperty]
+    private string _searchText = string.Empty;
+    [ObservableProperty]
+    private string _toggleButtonText = "Register Hotkey";
+    [ObservableProperty]
+    private string _updateButtonText = "v1.3.2";
+    [ObservableProperty]
+    private bool _isListening;
     private Hotkey ToggleHotkey => _configService.Settings.EnableHotkey;
     private ObservableCollection<SoundCommand> SoundCommands => _configService.Settings.SoundCommands;
     public FilteredObservableCollection<SoundCommand> FilteredSoundCommands { get; }
@@ -43,13 +52,15 @@ public partial class DashboardViewModel : ViewModelBase
     private readonly TwitchService _twitchService;
     private readonly IHotkeyService _hotkeyService;
     private readonly DatabaseConfigService _configService;
+    private readonly IAudioPlaybackService _audioPlaybackService;
 
-    public DashboardViewModel(TwitchService twitchService, IHotkeyService hotkeyService, DatabaseConfigService configService)
+    public DashboardViewModel(TwitchService twitchService, IHotkeyService hotkeyService, DatabaseConfigService configService, IAudioPlaybackService audioPlaybackService)
     {
         _twitchService = twitchService;
         _hotkeyService = hotkeyService;
         _configService = configService;
-        
+        _audioPlaybackService = audioPlaybackService;
+
         Username = _configService.State.Username;
         _twitchService.ConnectionStatus += TwitchServiceConnectionStatus;
         _twitchService.MessageLogged += TwitchServiceMessageLogged;
@@ -59,8 +70,7 @@ public partial class DashboardViewModel : ViewModelBase
         _configService.Settings.RefreshSubscriptions();
         FilteredSoundCommands = new FilteredObservableCollection<SoundCommand>(
             _configService.Settings.SoundCommands,
-            v => string.IsNullOrEmpty(SearchText) ||
-                 v.DisplayName.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+            v => string.IsNullOrEmpty(SearchText) || v.DisplayName.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
         );
 
         if (!string.IsNullOrEmpty(Username))
@@ -111,7 +121,10 @@ public partial class DashboardViewModel : ViewModelBase
             AllowMultiple = true,
             FileTypeFilter =
             [
-                new FilePickerFileType("Audio Files") { Patterns = ["*.mp3", "*.wav", "*.ogg"] }
+                new FilePickerFileType("Audio Files")
+                {
+                    Patterns = ["*.mp3", "*.wav", "*.ogg"]
+                }
             ]
         })!;
 
@@ -126,10 +139,10 @@ public partial class DashboardViewModel : ViewModelBase
 
             foreach (var f in files)
             {
+                var managedFileName = await _audioPlaybackService.CopyToManagedAudio(f.Path.LocalPath);
                 sc.SoundFiles.Add(new SoundFile
                 {
-                    FileName = f.Name,
-                    FilePath = f.Path.LocalPath,
+                    FileName = managedFileName,
                     Percentage = "1"
                 });
             }
@@ -143,14 +156,14 @@ public partial class DashboardViewModel : ViewModelBase
     [RelayCommand]
     private Task PreviewSound(SoundCommand soundCommand)
     {
-        _ = AudioService.PlaySound(soundCommand);
+        _ = _audioPlaybackService.PlaySound(soundCommand);
         return Task.CompletedTask;
     }
 
     [RelayCommand]
     private async Task EditSound(SoundCommand soundCommand)
     {
-        var dialog = new EditSoundCommandDialog(soundCommand)
+        var dialog = new EditSoundCommandDialog(soundCommand, _audioPlaybackService)
         {
             WindowStartupLocation = WindowStartupLocation.CenterOwner
         };
@@ -261,7 +274,7 @@ public partial class DashboardViewModel : ViewModelBase
                     Log.Debug($"Sound command '{soundCommand.Name}' is disabled. Skipping.");
                     continue;
                 }
-                
+
                 if (soundCommand.IsOnCooldown)
                 {
                     Log.Debug($"Sound command '{soundCommand.Name}' is on cooldown. Skipping.");
@@ -298,7 +311,7 @@ public partial class DashboardViewModel : ViewModelBase
 
                 Log.Debug($"Playing sound for command: {soundCommand.Name}");
                 soundCommand.UpdateLastPlayedTime();
-                await AudioService.PlaySound(soundCommand);
+                await _audioPlaybackService.PlaySound(soundCommand);
                 break;
             }
         }

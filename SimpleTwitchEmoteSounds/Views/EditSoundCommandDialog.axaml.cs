@@ -2,6 +2,7 @@
 using Avalonia.Markup.Xaml;
 using SimpleTwitchEmoteSounds.ViewModels;
 using SimpleTwitchEmoteSounds.Models;
+using SimpleTwitchEmoteSounds.Services;
 
 namespace SimpleTwitchEmoteSounds.Views;
 
@@ -13,10 +14,10 @@ public partial class EditSoundCommandDialog : Window
         InitializeComponent();
     }
 
-    public EditSoundCommandDialog(SoundCommand soundCommand)
+    public EditSoundCommandDialog(SoundCommand soundCommand, IAudioPlaybackService audioPlaybackService)
     {
         InitializeComponent();
-        DataContext = new EditSoundCommandDialogViewModel(soundCommand);
+        DataContext = new EditSoundCommandDialogViewModel(soundCommand, audioPlaybackService);
         ((EditSoundCommandDialogViewModel)DataContext).CloseRequested += ViewModel_CloseRequested;
     }
 

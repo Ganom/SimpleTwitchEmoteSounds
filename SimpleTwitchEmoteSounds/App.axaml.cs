@@ -71,14 +71,12 @@ public class App : Application
     {
         var viewLocator = Current?.DataTemplates.First(x => x is ViewLocator);
         var services = new ServiceCollection();
-        
-        var appLocation = AppDomain.CurrentDomain.BaseDirectory;
-        var dbPath = Path.Combine(appLocation, "Settings", "app.db");
-        Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
+
+        var dbPath = AppDataPathService.GetSettingsFilePath("app.db");
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite($"Data Source={dbPath}"));
-        
+
         if (viewLocator is not null)
             services.AddSingleton(viewLocator);
         services.AddSingleton<DatabaseConfigService>();
@@ -86,7 +84,8 @@ public class App : Application
         services.AddSingleton<PageNavigationService>();
         services.AddSingleton<TwitchService>();
         services.AddSingleton<IHotkeyService, HotkeyService>();
-        
+        services.AddSingleton<IAudioPlaybackService, AudioPlaybackService>();
+
         services.AddSingleton<AppViewModel>();
         var types = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(s => s.GetTypes())
@@ -101,5 +100,6 @@ public class App : Application
     {
         _configService?.SaveAndShutdown().Wait();
         _provider?.GetRequiredService<IHotkeyService>().Dispose();
+        _provider?.GetRequiredService<IAudioPlaybackService>().Dispose();
     }
 }
