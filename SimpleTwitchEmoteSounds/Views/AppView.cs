@@ -3,13 +3,19 @@ using Avalonia;
 using Avalonia.Controls;
 using SimpleTwitchEmoteSounds.Models;
 using SimpleTwitchEmoteSounds.Services;
+using SimpleTwitchEmoteSounds.Services.Database;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SimpleTwitchEmoteSounds.Views;
 
 public partial class AppView : Window
 {
+    private readonly DatabaseConfigService _configService;
+    
     public AppView()
     {
+        _configService = ((App)Application.Current!).Services!.GetRequiredService<DatabaseConfigService>();
+        
         InitializeComponent();
         Width = Settings.Width;
         Height = Settings.Height;
@@ -20,7 +26,7 @@ public partial class AppView : Window
         PositionChanged += OnPositionChanged;
     }
 
-    private static UserState Settings => ConfigService.State;
+    private UserState Settings => _configService.State;
 
     private void OnSizeChanged(object? sender, SizeChangedEventArgs e)
     {

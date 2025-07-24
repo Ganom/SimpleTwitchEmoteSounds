@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -6,8 +7,13 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Templates;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
+using SimpleTwitchEmoteSounds.Data;
 using SimpleTwitchEmoteSounds.Services;
+using SimpleTwitchEmoteSounds.Services.Database;
+using SimpleTwitchEmoteSounds.Services.Migration;
 using SimpleTwitchEmoteSounds.ViewModels;
 
 namespace SimpleTwitchEmoteSounds;
@@ -15,11 +21,32 @@ namespace SimpleTwitchEmoteSounds;
 public class App : Application
 {
     private IServiceProvider? _provider;
+    private DatabaseConfigService? _configService;
+
+    public IServiceProvider? Services => _provider;
 
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
         _provider = ConfigureServices();
+        _configService = _provider.GetRequiredService<DatabaseConfigService>();
+        var migrationService = _provider.GetRequiredService<JsonToDbMigrationService>();
+        RunMigration(migrationService);
+    }
+
+    private void RunMigration(JsonToDbMigrationService migrationService)
+    {
+        try
+        {
+            if (!migrationService.ShouldMigrate())
+                return;
+            migrationService.Migrate();
+            _configService?.ReloadSettingsAfterMigration();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Migration failed, continuing with defaults");
+        }
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -44,15 +71,22 @@ public class App : Application
     {
         var viewLocator = Current?.DataTemplates.First(x => x is ViewLocator);
         var services = new ServiceCollection();
+        
+        var appLocation = AppDomain.CurrentDomain.BaseDirectory;
+        var dbPath = Path.Combine(appLocation, "Settings", "app.db");
+        Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
 
-        // Services
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlite($"Data Source={dbPath}"));
+        
         if (viewLocator is not null)
             services.AddSingleton(viewLocator);
+        services.AddSingleton<DatabaseConfigService>();
+        services.AddSingleton<JsonToDbMigrationService>();
         services.AddSingleton<PageNavigationService>();
         services.AddSingleton<TwitchService>();
         services.AddSingleton<IHotkeyService, HotkeyService>();
-
-        // ViewModels
+        
         services.AddSingleton<AppViewModel>();
         var types = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(s => s.GetTypes())
@@ -65,6 +99,7 @@ public class App : Application
 
     private void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
+        _configService?.SaveAndShutdown().Wait();
         _provider?.GetRequiredService<IHotkeyService>().Dispose();
     }
 }

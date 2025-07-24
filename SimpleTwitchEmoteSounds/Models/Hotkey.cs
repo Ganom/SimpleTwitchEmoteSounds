@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using SharpHook.Data;
 using SharpHook.Native;
 using SimpleTwitchEmoteSounds.Converters;
 
@@ -13,8 +14,7 @@ public class Hotkey(HashSet<KeyCode> keys)
 
     public override bool Equals(object? obj)
     {
-        return obj is Hotkey combo &&
-               Keys.SetEquals(combo.Keys);
+        return obj is Hotkey combo && Keys.SetEquals(combo.Keys);
     }
 
     public override int GetHashCode()

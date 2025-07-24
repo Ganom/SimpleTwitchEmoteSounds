@@ -1,5 +1,8 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Microsoft.Extensions.DependencyInjection;
+using SimpleTwitchEmoteSounds.Services.Database;
 using SimpleTwitchEmoteSounds.ViewModels;
 
 namespace SimpleTwitchEmoteSounds.Views;
@@ -9,7 +12,8 @@ public partial class SoundStatsDialogView : Window
     public SoundStatsDialogView()
     {
         InitializeComponent();
-        DataContext = new SoundStatsDialogViewModel();
+        var configService = ((App)Application.Current!).Services!.GetRequiredService<DatabaseConfigService>();
+        DataContext = new SoundStatsDialogViewModel(configService);
         ((SoundStatsDialogViewModel)DataContext).CloseRequested += ViewModel_CloseRequested;
     }
     
