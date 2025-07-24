@@ -39,11 +39,13 @@ A feature not prominently shown is that you can split the name of the trigger wi
 For example, name:`hi,hii,hiii` would be a valid phrase for each of those words.
 
 #### 🔊 Can you show me an example of a multi-sound trigger?
+
 Sure! We'll do a plink multi-sound trigger using these sounds:
 
 - [plink](https://github.com/Ganom/SimpleTwitchEmoteSounds/raw/refs/heads/master/example/plink.mp3)
 - [plonk](https://github.com/Ganom/SimpleTwitchEmoteSounds/raw/refs/heads/master/example/plonk.mp3)
 
-For the name, we'll set it to `plink`, then we press ok followed by ctrl-clicking both files plink and plonk. Once it's created, we'll set the percentage to 50% and 50%. See the image below for how it should look.
+For the name, we'll set it to `plink`, then we press ok followed by ctrl-clicking both files plink and plonk. Once it's
+created, we'll set the percentage to 50% and 50%. See the image below for how it should look.
 
 ![plink plonk example](https://raw.githubusercontent.com/Ganom/SimpleTwitchEmoteSounds/refs/heads/master/example/example-image.png)

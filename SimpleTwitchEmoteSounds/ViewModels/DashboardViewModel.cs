@@ -1,4 +1,6 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
@@ -20,6 +22,8 @@ using SimpleTwitchEmoteSounds.Services;
 using SimpleTwitchEmoteSounds.Services.Database;
 using SimpleTwitchEmoteSounds.Views;
 
+#endregion
+
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable UnusedParameterInPartialMethod
 
@@ -29,24 +33,33 @@ public partial class DashboardViewModel : ViewModelBase
 {
     [ObservableProperty]
     private string _username;
+
     [ObservableProperty]
     private bool _isConnected;
+
     [ObservableProperty]
     private string _connectButtonText = "Connect";
+
     [ObservableProperty]
     private string _connectButtonColor = "white";
+
     [ObservableProperty]
     private bool _isEnabled = true;
+
     [ObservableProperty]
     private string _searchText = string.Empty;
+
     [ObservableProperty]
     private string _toggleButtonText = "Register Hotkey";
+
     [ObservableProperty]
     private string _updateButtonText = "v1.3.2";
+
     [ObservableProperty]
     private bool _isListening;
     private Hotkey ToggleHotkey => _configService.Settings.EnableHotkey;
-    private ObservableCollection<SoundCommand> SoundCommands => _configService.Settings.SoundCommands;
+    private ObservableCollection<SoundCommand> SoundCommands =>
+        _configService.Settings.SoundCommands;
     public FilteredObservableCollection<SoundCommand> FilteredSoundCommands { get; }
 
     private readonly TwitchService _twitchService;
@@ -54,7 +67,12 @@ public partial class DashboardViewModel : ViewModelBase
     private readonly DatabaseConfigService _configService;
     private readonly IAudioPlaybackService _audioPlaybackService;
 
-    public DashboardViewModel(TwitchService twitchService, IHotkeyService hotkeyService, DatabaseConfigService configService, IAudioPlaybackService audioPlaybackService)
+    public DashboardViewModel(
+        TwitchService twitchService,
+        IHotkeyService hotkeyService,
+        DatabaseConfigService configService,
+        IAudioPlaybackService audioPlaybackService
+    )
     {
         _twitchService = twitchService;
         _hotkeyService = hotkeyService;
@@ -70,7 +88,9 @@ public partial class DashboardViewModel : ViewModelBase
         _configService.Settings.RefreshSubscriptions();
         FilteredSoundCommands = new FilteredObservableCollection<SoundCommand>(
             _configService.Settings.SoundCommands,
-            v => string.IsNullOrEmpty(SearchText) || v.DisplayName.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+            v =>
+                string.IsNullOrEmpty(SearchText)
+                || v.DisplayName.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
         );
 
         if (!string.IsNullOrEmpty(Username))
@@ -104,7 +124,7 @@ public partial class DashboardViewModel : ViewModelBase
         var mainWindow = GetMainWindow();
         var dialog = new NewSoundCommandDialog
         {
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
         };
         var result = await dialog.ShowDialog<NewSoundCommandResult?>(mainWindow);
 
@@ -115,18 +135,20 @@ public partial class DashboardViewModel : ViewModelBase
 
         var topLevel = TopLevel.GetTopLevel(mainWindow);
 
-        var files = await topLevel?.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Select Audio Files",
-            AllowMultiple = true,
-            FileTypeFilter =
-            [
-                new FilePickerFileType("Audio Files")
-                {
-                    Patterns = ["*.mp3", "*.wav", "*.ogg"]
-                }
-            ]
-        })!;
+        var files = await topLevel?.StorageProvider.OpenFilePickerAsync(
+            new FilePickerOpenOptions
+            {
+                Title = "Select Audio Files",
+                AllowMultiple = true,
+                FileTypeFilter =
+                [
+                    new FilePickerFileType("Audio Files")
+                    {
+                        Patterns = ["*.mp3", "*.wav", "*.ogg"],
+                    },
+                ],
+            }
+        )!;
 
         if (files is { Count: >= 1 })
         {
@@ -134,17 +156,15 @@ public partial class DashboardViewModel : ViewModelBase
             {
                 Name = result.Name,
                 Category = result.Category,
-                SoundFiles = []
+                SoundFiles = [],
             };
 
             foreach (var f in files)
             {
-                var managedFileName = await _audioPlaybackService.CopyToManagedAudio(f.Path.LocalPath);
-                sc.SoundFiles.Add(new SoundFile
-                {
-                    FileName = managedFileName,
-                    Percentage = "1"
-                });
+                var managedFileName = await _audioPlaybackService.CopyToManagedAudio(
+                    f.Path.LocalPath
+                );
+                sc.SoundFiles.Add(new SoundFile { FileName = managedFileName, Percentage = "1" });
             }
 
             SoundCommands.Add(sc);
@@ -165,7 +185,7 @@ public partial class DashboardViewModel : ViewModelBase
     {
         var dialog = new EditSoundCommandDialog(soundCommand, _audioPlaybackService)
         {
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
         };
         var result = await dialog.ShowDialog<SoundCommand?>(GetMainWindow());
 
@@ -181,7 +201,8 @@ public partial class DashboardViewModel : ViewModelBase
     {
         var result = await ShowConfirmationDialog(
             "Remove Sound",
-            $"Are you sure you want to remove the sound '{soundCommand.Name}'?");
+            $"Are you sure you want to remove the sound '{soundCommand.Name}'?"
+        );
 
         if (result == ButtonResult.Yes)
         {
@@ -225,10 +246,7 @@ public partial class DashboardViewModel : ViewModelBase
     private void UpdateButton()
     {
         const string url = "https://github.com/Ganom/SimpleTwitchEmoteSounds/releases";
-        Process.Start(new ProcessStartInfo(url)
-        {
-            UseShellExecute = true
-        });
+        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
 
     partial void OnUsernameChanged(string value)
@@ -277,9 +295,15 @@ public partial class DashboardViewModel : ViewModelBase
                     {
                         MatchType.Equals => msg.Content.Trim().Equals(name),
                         MatchType.StartsWith => msg.Content.Trim().StartsWith(name),
-                        MatchType.StartsWithWord => msg.Content.Trim().Split(' ')[0].Equals(name.Trim()),
-                        MatchType.ContainsWord => Regex.IsMatch(msg.Content, $@"\b{Regex.Escape(name)}\b"),
-                        _ => throw new ArgumentOutOfRangeException()
+                        MatchType.StartsWithWord => msg
+                            .Content.Trim()
+                            .Split(' ')[0]
+                            .Equals(name.Trim()),
+                        MatchType.ContainsWord => Regex.IsMatch(
+                            msg.Content,
+                            $@"\b{Regex.Escape(name)}\b"
+                        ),
+                        _ => throw new ArgumentOutOfRangeException(),
                     };
                 });
 
@@ -290,12 +314,14 @@ public partial class DashboardViewModel : ViewModelBase
 
                 var shouldPlay = ShouldPlaySound(float.Parse(soundCommand.PlayChance));
                 Log.Debug(
-                    $"Command '{soundCommand.Name}' matched. Play chance: {soundCommand.PlayChance}%. Should play: {shouldPlay}");
+                    $"Command '{soundCommand.Name}' matched. Play chance: {soundCommand.PlayChance}%. Should play: {shouldPlay}"
+                );
 
                 if (!shouldPlay)
                 {
                     Log.Debug(
-                        $"Command '{soundCommand.Name}' matched but didn't pass the play chance check. Continuing to next command.");
+                        $"Command '{soundCommand.Name}' matched but didn't pass the play chance check. Continuing to next command."
+                    );
                     continue;
                 }
 
@@ -316,7 +342,8 @@ public partial class DashboardViewModel : ViewModelBase
         var randomValue = (float)Random.Shared.NextDouble();
         var shouldPlay = randomValue <= playChance;
         Log.Debug(
-            $"Play chance check: Random value: {randomValue:F4}, Play chance: {playChance:F4}, Should play: {shouldPlay}");
+            $"Play chance check: Random value: {randomValue:F4}, Play chance: {playChance:F4}, Should play: {shouldPlay}"
+        );
         return shouldPlay;
     }
 
@@ -376,6 +403,8 @@ public partial class DashboardViewModel : ViewModelBase
 
     private static Window GetMainWindow()
     {
-        return ((IClassicDesktopStyleApplicationLifetime)Application.Current!.ApplicationLifetime!).MainWindow!;
+        return (
+            (IClassicDesktopStyleApplicationLifetime)Application.Current!.ApplicationLifetime!
+        ).MainWindow!;
     }
 }

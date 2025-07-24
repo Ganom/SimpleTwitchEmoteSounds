@@ -1,5 +1,9 @@
+#region
+
 using Microsoft.EntityFrameworkCore;
 using SimpleTwitchEmoteSounds.Data.Entities;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Data;
 
@@ -14,7 +18,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder.Entity<AppSettingsEntity>(entity =>
         {
-            entity.HasMany(e => e.SoundCommands)
+            entity
+                .HasMany(e => e.SoundCommands)
                 .WithOne(e => e.AppSettings)
                 .HasForeignKey(e => e.AppSettingsId)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -22,7 +27,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         modelBuilder.Entity<SoundCommandEntity>(entity =>
         {
-            entity.HasMany(e => e.SoundFiles)
+            entity
+                .HasMany(e => e.SoundFiles)
                 .WithOne(e => e.SoundCommand)
                 .HasForeignKey(e => e.SoundCommandId)
                 .OnDelete(DeleteBehavior.Cascade);

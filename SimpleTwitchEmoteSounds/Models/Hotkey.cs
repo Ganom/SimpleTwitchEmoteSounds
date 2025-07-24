@@ -1,16 +1,19 @@
-﻿using System.Collections.Generic;
+﻿#region
+
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using SharpHook.Data;
-using SharpHook.Native;
 using SimpleTwitchEmoteSounds.Converters;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Models;
 
 [JsonConverter(typeof(HotkeyConverter))]
 public class Hotkey(HashSet<KeyCode> keys)
 {
-    public HashSet<KeyCode> Keys { get; } = [..keys];
+    public HashSet<KeyCode> Keys { get; } = [.. keys];
 
     public override bool Equals(object? obj)
     {

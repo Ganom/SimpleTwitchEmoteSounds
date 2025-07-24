@@ -1,4 +1,5 @@
-using SimpleTwitchEmoteSounds.Models;
+#region
+
 using System;
 using System.Collections.Concurrent;
 using System.IO;
@@ -7,6 +8,9 @@ using System.Threading.Tasks;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using Serilog;
+using SimpleTwitchEmoteSounds.Models;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Services;
 
@@ -59,7 +63,7 @@ public class AudioPlaybackService : IAudioPlaybackService
         {
             FilePath = filePath,
             Volume = float.Parse(soundCommand.Volume),
-            SoundCommand = soundCommand
+            SoundCommand = soundCommand,
         };
 
         var channel = GetAvailableChannel();
@@ -71,7 +75,10 @@ public class AudioPlaybackService : IAudioPlaybackService
         else
         {
             _playbackQueue.Enqueue(request);
-            Log.Debug("All audio channels busy, sound request queued. Queue size: {QueueSize}", _playbackQueue.Count);
+            Log.Debug(
+                "All audio channels busy, sound request queued. Queue size: {QueueSize}",
+                _playbackQueue.Count
+            );
         }
 
         return Task.CompletedTask;
@@ -122,7 +129,6 @@ public class AudioPlaybackService : IAudioPlaybackService
         return Task.FromResult(fileName);
     }
 
-
     private SoundFile? SelectRandomSoundFile(SoundCommand soundCommand)
     {
         var random = new Random();
@@ -130,16 +136,26 @@ public class AudioPlaybackService : IAudioPlaybackService
         var randomValue = (float)(random.NextDouble() * totalProbability);
         var cumulativeProbability = 0f;
 
-        Log.Debug("Sound selection: Total probability: {TotalProbability:F4}, Random value: {RandomValue:F4}", totalProbability, randomValue);
+        Log.Debug(
+            "Sound selection: Total probability: {TotalProbability:F4}, Random value: {RandomValue:F4}",
+            totalProbability,
+            randomValue
+        );
 
         foreach (var soundFile in soundCommand.SoundFiles)
         {
             var probability = float.Parse(soundFile.Percentage);
             cumulativeProbability += probability;
 
-            Log.Debug("Checking sound file: {SoundFileFileName}, Probability: {Probability:F4}, Cumulative: {CumulativeProbability:F4}", soundFile.FileName, probability, cumulativeProbability);
+            Log.Debug(
+                "Checking sound file: {SoundFileFileName}, Probability: {Probability:F4}, Cumulative: {CumulativeProbability:F4}",
+                soundFile.FileName,
+                probability,
+                cumulativeProbability
+            );
 
-            if (!(randomValue <= cumulativeProbability)) continue;
+            if (!(randomValue <= cumulativeProbability))
+                continue;
             Log.Debug("Selected sound file: {SoundFileFileName}", soundFile.FileName);
             return soundFile;
         }
@@ -188,7 +204,8 @@ public class AudioPlaybackService : IAudioPlaybackService
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+            return;
 
         foreach (var channel in _channels)
         {
@@ -214,7 +231,8 @@ public class AudioPlaybackService : IAudioPlaybackService
 
         public async Task PlayAsync(AudioPlaybackRequest request)
         {
-            if (IsBusy || _disposed) return;
+            if (IsBusy || _disposed)
+                return;
 
             IsBusy = true;
             try
@@ -223,7 +241,7 @@ public class AudioPlaybackService : IAudioPlaybackService
                 _outputDevice = new WaveOutEvent();
                 var volumeProvider = new VolumeSampleProvider(audioFile)
                 {
-                    Volume = request.Volume
+                    Volume = request.Volume,
                 };
 
                 _outputDevice.Init(volumeProvider);
@@ -248,7 +266,8 @@ public class AudioPlaybackService : IAudioPlaybackService
 
         public void Dispose()
         {
-            if (_disposed) return;
+            if (_disposed)
+                return;
 
             _outputDevice?.Dispose();
             _disposed = true;

@@ -30,17 +30,17 @@
             <controls:GroupBox>
                 <controls:GroupBox.Header>
                     <StackPanel Orientation="Horizontal">
-                        <avalonia:MaterialIcon Kind="ChartLine" 
-                                             VerticalAlignment="Center" 
-                                             Margin="0,0,8,0"
-                                             Foreground="{DynamicResource SukiPrimaryColor}" />
-                        <TextBlock Text="Sound Command Statistics" 
-                                   FontWeight="Bold" 
+                        <avalonia:MaterialIcon Kind="ChartLine"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,0"
+                                               Foreground="{DynamicResource SukiPrimaryColor}" />
+                        <TextBlock Text="Sound Command Statistics"
+                                   FontWeight="Bold"
                                    FontSize="16"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                 </controls:GroupBox.Header>
-                
+
                 <DataGrid ItemsSource="{Binding SortedSoundCommands}"
                           IsReadOnly="True"
                           CanUserSortColumns="True"
@@ -63,14 +63,16 @@
                                             Margin="5">
                                         <Button.Content>
                                             <StackPanel Orientation="Horizontal">
-                                                <avalonia:MaterialIcon Kind="Refresh" 
-                                                                     Margin="0,0,3,0"
-                                                                     Foreground="{DynamicResource SukiAccentColor}" />
+                                                <avalonia:MaterialIcon Kind="Refresh"
+                                                                       Margin="0,0,3,0"
+                                                                       Foreground="{DynamicResource SukiAccentColor}" />
                                                 <TextBlock Text="Reset" />
                                             </StackPanel>
                                         </Button.Content>
                                         <Button.Command>
-                                            <Binding Path="((vm:SoundStatsDialogViewModel)DataContext).RefreshStatsCommand" RelativeSource="{RelativeSource AncestorType=suki:SukiWindow}" />
+                                            <Binding
+                                                Path="((vm:SoundStatsDialogViewModel)DataContext).RefreshStatsCommand"
+                                                RelativeSource="{RelativeSource AncestorType=suki:SukiWindow}" />
                                         </Button.Command>
                                         <Button.CommandParameter>
                                             <Binding />
@@ -89,17 +91,17 @@
             <controls:GroupBox>
                 <controls:GroupBox.Header>
                     <StackPanel Orientation="Horizontal">
-                        <avalonia:MaterialIcon Kind="ChartPie" 
-                                             VerticalAlignment="Center" 
-                                             Margin="0,0,8,0"
-                                             Foreground="{DynamicResource SukiPrimaryColor}" />
-                        <TextBlock Text="Usage Distribution" 
-                                   FontWeight="Bold" 
+                        <avalonia:MaterialIcon Kind="ChartPie"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,0"
+                                               Foreground="{DynamicResource SukiPrimaryColor}" />
+                        <TextBlock Text="Usage Distribution"
+                                   FontWeight="Bold"
                                    FontSize="16"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                 </controls:GroupBox.Header>
-                
+
                 <Border MinHeight="400"
                         MinWidth="350"
                         CornerRadius="8"

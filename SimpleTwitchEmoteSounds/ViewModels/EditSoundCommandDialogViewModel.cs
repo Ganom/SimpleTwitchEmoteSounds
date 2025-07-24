@@ -1,4 +1,6 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -11,9 +13,14 @@ using Serilog;
 using SimpleTwitchEmoteSounds.Models;
 using SimpleTwitchEmoteSounds.Services;
 
+#endregion
+
 namespace SimpleTwitchEmoteSounds.ViewModels;
 
-public partial class EditSoundCommandDialogViewModel(SoundCommand soundCommand, IAudioPlaybackService audioPlaybackService) : ObservableObject
+public partial class EditSoundCommandDialogViewModel(
+    SoundCommand soundCommand,
+    IAudioPlaybackService audioPlaybackService
+) : ObservableObject
 {
     [ObservableProperty]
     private SoundCommand _soundCommand = soundCommand;
@@ -43,21 +50,25 @@ public partial class EditSoundCommandDialogViewModel(SoundCommand soundCommand, 
     private async Task AddSoundFile()
     {
         var topLevel = TopLevel.GetTopLevel(
-            ((IClassicDesktopStyleApplicationLifetime)Application.Current!.ApplicationLifetime!)
-            .MainWindow);
+            (
+                (IClassicDesktopStyleApplicationLifetime)Application.Current!.ApplicationLifetime!
+            ).MainWindow
+        );
 
-        var files = await topLevel?.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Select Audio Files",
-            AllowMultiple = true,
-            FileTypeFilter =
-            [
-                new FilePickerFileType("Audio Files")
-                {
-                    Patterns = ["*.mp3", "*.wav", "*.ogg"]
-                }
-            ]
-        })!;
+        var files = await topLevel?.StorageProvider.OpenFilePickerAsync(
+            new FilePickerOpenOptions
+            {
+                Title = "Select Audio Files",
+                AllowMultiple = true,
+                FileTypeFilter =
+                [
+                    new FilePickerFileType("Audio Files")
+                    {
+                        Patterns = ["*.mp3", "*.wav", "*.ogg"],
+                    },
+                ],
+            }
+        )!;
 
         if (files is { Count: >= 1 })
         {
@@ -65,12 +76,12 @@ public partial class EditSoundCommandDialogViewModel(SoundCommand soundCommand, 
             {
                 try
                 {
-                    var managedFileName = await audioPlaybackService.CopyToManagedAudio(f.Path.LocalPath);
-                    SoundCommand.SoundFiles.Add(new SoundFile
-                    {
-                        FileName = managedFileName,
-                        Percentage = "1"
-                    });
+                    var managedFileName = await audioPlaybackService.CopyToManagedAudio(
+                        f.Path.LocalPath
+                    );
+                    SoundCommand.SoundFiles.Add(
+                        new SoundFile { FileName = managedFileName, Percentage = "1" }
+                    );
                 }
                 catch (Exception ex)
                 {

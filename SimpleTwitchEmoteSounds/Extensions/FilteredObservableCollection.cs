@@ -1,13 +1,17 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using SimpleTwitchEmoteSounds.Common;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Extensions;
 
-public class FilteredObservableCollection<T> : ObservableCollection<T> where T : INotifyPropertyChanged
+public class FilteredObservableCollection<T> : ObservableCollection<T>
+    where T : INotifyPropertyChanged
 {
     private ObservableCollection<T> _source;
     private readonly Func<T, bool> _filter;
@@ -34,7 +38,8 @@ public class FilteredObservableCollection<T> : ObservableCollection<T> where T :
                 if (e.NewItems != null)
                     foreach (T item in e.NewItems)
                     {
-                        if (!_filter(item)) continue;
+                        if (!_filter(item))
+                            continue;
                         Add(item);
                         item.PropertyChanged += Item_PropertyChanged;
                     }
@@ -44,7 +49,8 @@ public class FilteredObservableCollection<T> : ObservableCollection<T> where T :
                 if (e.OldItems != null)
                     foreach (T item in e.OldItems)
                     {
-                        if (!Contains(item)) continue;
+                        if (!Contains(item))
+                            continue;
                         Remove(item);
                         item.PropertyChanged -= Item_PropertyChanged;
                     }
@@ -93,16 +99,16 @@ public class FilteredObservableCollection<T> : ObservableCollection<T> where T :
     public void UpdateSource(ObservableCollection<T> newSource)
     {
         _source.CollectionChanged -= SourceCollectionChanged;
-        
+
         foreach (var item in this.ToList())
         {
             item.PropertyChanged -= Item_PropertyChanged;
             Remove(item);
         }
-        
+
         _source = newSource;
         _source.CollectionChanged += SourceCollectionChanged;
-        
+
         foreach (var item in _source.Where(_filter))
         {
             Add(item);

@@ -1,10 +1,14 @@
-﻿using Avalonia;
+﻿#region
+
 using System;
 using System.Threading.Tasks;
+using Avalonia;
 using Serilog;
 using SimpleTwitchEmoteSounds.Services;
 using SimpleTwitchEmoteSounds.Services.Core;
 using Velopack;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds;
 

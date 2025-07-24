@@ -1,4 +1,8 @@
-﻿using System.Text.RegularExpressions;
+﻿#region
+
+using System.Text.RegularExpressions;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Common;
 
@@ -46,7 +50,10 @@ public static partial class RegexPatterns
     [GeneratedRegex(@"[ \t]+", RegexOptions.Compiled)]
     public static partial Regex ExcessiveWhitespaceRegex();
 
-    [GeneratedRegex(@"\*\*Full Changelog\*\*:.*?(?=\n|$)", RegexOptions.Compiled | RegexOptions.Multiline)]
+    [GeneratedRegex(
+        @"\*\*Full Changelog\*\*:.*?(?=\n|$)",
+        RegexOptions.Compiled | RegexOptions.Multiline
+    )]
     public static partial Regex FullChangelogRegex();
 
     [GeneratedRegex(@"\[.*?Full Changelog.*?\]\(.*?\)", RegexOptions.Compiled)]
@@ -58,7 +65,10 @@ public static partial class RegexPatterns
     [GeneratedRegex(@"\n{3,}", RegexOptions.Compiled)]
     public static partial Regex MultipleNewlinesRegex();
 
-    [GeneratedRegex(@"###\s*\?+\s*(New Features|Bug Fixes|Other Changes)", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
+    [GeneratedRegex(
+        @"###\s*\?+\s*(New Features|Bug Fixes|Other Changes)",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase
+    )]
     public static partial Regex CategoryHeaderRegex();
 
     [GeneratedRegex(@"^[-*•]\s*", RegexOptions.Compiled)]
@@ -67,4 +77,3 @@ public static partial class RegexPatterns
     [GeneratedRegex(@"\s+by\s+@\w+\s*$", RegexOptions.Compiled)]
     public static partial Regex AuthorAttributionRegex();
 }
-

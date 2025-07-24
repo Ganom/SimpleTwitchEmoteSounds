@@ -1,10 +1,10 @@
+#region
+
 using System;
-using System.IO;
-using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Controls.Templates;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +20,8 @@ using SimpleTwitchEmoteSounds.ViewModels;
 using SimpleTwitchEmoteSounds.Views;
 using SukiUI.Dialogs;
 using SukiUI.Toasts;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds;
 
@@ -70,6 +72,12 @@ public class App : Application
             var migrationService = Services.GetRequiredService<JsonToDbMigrationService>();
             RunMigration(migrationService);
 
+            _ = Task.Run(() =>
+            {
+                var updateService = Services.GetRequiredService<IUpdateService>();
+                updateService.CheckForUpdatesAsync();
+            });
+
             desktop.MainWindow = views.CreateView<AppViewModel>(Services) as Window;
             desktop.Exit += OnExit;
         }
@@ -84,6 +92,7 @@ public class App : Application
             .AddView<AppView, AppViewModel>(services)
             //other views
             .AddView<DashboardView, DashboardViewModel>(services)
+            .AddView<UpdateAvailableDialog, UpdateAvailableDialogViewModel>(services)
             .AddView<EditSoundCommandDialog, EditSoundCommandDialogViewModel>(services)
             .AddView<NewSoundCommandDialog, NewSoundCommandDialogViewModel>(services)
             .AddView<SoundStatsDialogView, SoundStatsDialogViewModel>(services);
@@ -93,8 +102,7 @@ public class App : Application
     {
         var dbPath = AppDataPathService.GetSettingsFilePath("app.db");
 
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlite($"Data Source={dbPath}"));
+        services.AddDbContext<AppDbContext>(options => options.UseSqlite($"Data Source={dbPath}"));
 
         services.AddSingleton<ISukiToastManager, SukiToastManager>();
         services.AddSingleton<ISukiDialogManager, SukiDialogManager>();

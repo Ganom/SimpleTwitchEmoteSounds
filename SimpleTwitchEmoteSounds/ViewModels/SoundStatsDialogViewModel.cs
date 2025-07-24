@@ -1,4 +1,6 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -9,10 +11,12 @@ using LiveChartsCore;
 using LiveChartsCore.Measure;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
-using SimpleTwitchEmoteSounds.Models;
-using SkiaSharp;
 using LiveChartsCore.SkiaSharpView.Painting.ImageFilters;
+using SimpleTwitchEmoteSounds.Models;
 using SimpleTwitchEmoteSounds.Services.Database;
+using SkiaSharp;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.ViewModels;
 
@@ -24,7 +28,7 @@ public partial class SoundStatsDialogViewModel : ObservableObject
     private static readonly SolidColorPaint Paint = new(SKColors.White)
     {
         ImageFilter = new DropShadow(2, 2, 2, 2, SKColors.Black),
-        SKTypeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold)
+        SKTypeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold),
     };
 
     private static readonly SKColor[] ChartColors =
@@ -38,7 +42,7 @@ public partial class SoundStatsDialogViewModel : ObservableObject
         SKColor.Parse("#CC8844"),
         SKColor.Parse("#99CC66"),
         SKColor.Parse("#CC7799"),
-        SKColor.Parse("#7799CC")
+        SKColor.Parse("#7799CC"),
     ];
 
     private readonly Dictionary<string, int> _soundColorIndices = new();
@@ -47,8 +51,7 @@ public partial class SoundStatsDialogViewModel : ObservableObject
     public ObservableCollection<ISeries> PieSeries { get; } = [];
 
     public IEnumerable<SoundCommand> SortedSoundCommands =>
-        _configService.Settings.SoundCommands
-            .OrderByDescending(x => x.TimesPlayed);
+        _configService.Settings.SoundCommands.OrderByDescending(x => x.TimesPlayed);
 
     public SoundStatsDialogViewModel(DatabaseConfigService configService)
     {
@@ -74,8 +77,8 @@ public partial class SoundStatsDialogViewModel : ObservableObject
     }
 
     private IEnumerable<SoundCommand> GetTopSounds() =>
-        _configService.Settings.SoundCommands
-            .OrderByDescending(x => x.TimesPlayed)
+        _configService
+            .Settings.SoundCommands.OrderByDescending(x => x.TimesPlayed)
             .Take(TopSoundsCount)
             .Where(x => x.TimesPlayed > 0);
 
@@ -115,7 +118,7 @@ public partial class SoundStatsDialogViewModel : ObservableObject
             DataLabelsSize = 16,
             DataLabelsPaint = Paint,
             ToolTipLabelFormatter = _ => $"{soundCommand.TimesPlayed:N0} plays",
-            DataLabelsFormatter = _ => $"{soundCommand.DisplayName}"
+            DataLabelsFormatter = _ => $"{soundCommand.DisplayName}",
         };
     }
 
@@ -131,7 +134,7 @@ public partial class SoundStatsDialogViewModel : ObservableObject
     private void UpdatePieChart()
     {
         var topSounds = GetTopSounds().ToList();
-        
+
         Array.Fill(_colorInUse, false);
 
         for (var i = 0; i < Math.Max(PieSeries.Count, topSounds.Count); i++)
@@ -153,8 +156,8 @@ public partial class SoundStatsDialogViewModel : ObservableObject
             }
         }
 
-        var soundsToRemove = _soundColorIndices.Keys
-            .Where(name => topSounds.All(s => s.DisplayName != name))
+        var soundsToRemove = _soundColorIndices
+            .Keys.Where(name => topSounds.All(s => s.DisplayName != name))
             .ToList();
 
         foreach (var soundName in soundsToRemove)

@@ -1,9 +1,12 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using SharpHook.Data;
-using SharpHook.Native;
 using SimpleTwitchEmoteSounds.Models;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Converters;
 

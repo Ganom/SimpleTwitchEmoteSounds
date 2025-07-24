@@ -26,10 +26,10 @@
     <DockPanel LastChildFill="True">
         <!-- Bottom Action Buttons -->
         <controls:GlassCard DockPanel.Dock="Bottom" Margin="20,10,20,20">
-            <WrapPanel Orientation="Horizontal" 
-                       HorizontalAlignment="Center" 
+            <WrapPanel Orientation="Horizontal"
+                       HorizontalAlignment="Center"
                        VerticalAlignment="Center">
-                <Button Margin="10" 
+                <Button Margin="10"
                         MinWidth="120"
                         Classes="Accent">
                     <Button.Content>
@@ -42,7 +42,7 @@
                         <Binding Path="AddSoundFileCommand" />
                     </Button.Command>
                 </Button>
-                <Button Margin="10" 
+                <Button Margin="10"
                         MinWidth="120">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
@@ -63,37 +63,37 @@
         <!-- Main Content -->
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <controls:GlassCard Margin="20"
-                              HorizontalAlignment="Stretch">
+                                HorizontalAlignment="Stretch">
                 <controls:GroupBox>
                     <controls:GroupBox.Header>
                         <StackPanel Orientation="Horizontal">
-                            <avalonia:MaterialIcon Kind="Edit" 
-                                                 VerticalAlignment="Center" 
-                                                 Margin="0,0,8,0"
-                                                 Foreground="{DynamicResource SukiPrimaryColor}" />
-                            <TextBlock Text="Sound Command Settings" 
-                                       FontWeight="Bold" 
+                            <avalonia:MaterialIcon Kind="Edit"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,8,0"
+                                                   Foreground="{DynamicResource SukiPrimaryColor}" />
+                            <TextBlock Text="Sound Command Settings"
+                                       FontWeight="Bold"
                                        FontSize="16"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </controls:GroupBox.Header>
-                    
+
                     <StackPanel Spacing="20">
                         <!-- Basic Info Section -->
                         <controls:GlassCard>
                             <controls:GroupBox Header="Basic Information">
-                                <Grid RowDefinitions="Auto,Auto,Auto" 
-                                      ColumnDefinitions="120,*" 
+                                <Grid RowDefinitions="Auto,Auto,Auto"
+                                      ColumnDefinitions="120,*"
                                       RowSpacing="15">
                                     <!-- Name -->
                                     <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
-                                        <avalonia:MaterialIcon Kind="Tag" 
-                                                             VerticalAlignment="Center" 
-                                                             Margin="0,0,5,0"
-                                                             Foreground="{DynamicResource SukiPrimaryColor}" />
-                                        <TextBlock Text="Name:" 
-                                                 VerticalAlignment="Center"
-                                                 FontWeight="Medium" />
+                                        <avalonia:MaterialIcon Kind="Tag"
+                                                               VerticalAlignment="Center"
+                                                               Margin="0,0,5,0"
+                                                               Foreground="{DynamicResource SukiPrimaryColor}" />
+                                        <TextBlock Text="Name:"
+                                                   VerticalAlignment="Center"
+                                                   FontWeight="Medium" />
                                     </StackPanel>
                                     <TextBox Grid.Row="0" Grid.Column="1"
                                              Text="{Binding SoundCommand.Name}"
@@ -102,13 +102,13 @@
 
                                     <!-- Match Type -->
                                     <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal">
-                                        <avalonia:MaterialIcon Kind="Target" 
-                                                             VerticalAlignment="Center" 
-                                                             Margin="0,0,5,0"
-                                                             Foreground="{DynamicResource SukiPrimaryColor}" />
-                                        <TextBlock Text="Match Type:" 
-                                                 VerticalAlignment="Center"
-                                                 FontWeight="Medium" />
+                                        <avalonia:MaterialIcon Kind="Target"
+                                                               VerticalAlignment="Center"
+                                                               Margin="0,0,5,0"
+                                                               Foreground="{DynamicResource SukiPrimaryColor}" />
+                                        <TextBlock Text="Match Type:"
+                                                   VerticalAlignment="Center"
+                                                   FontWeight="Medium" />
                                     </StackPanel>
                                     <ComboBox Grid.Row="1" Grid.Column="1"
                                               ItemsSource="{Binding SoundCommand.MatchTypes}"
@@ -117,13 +117,13 @@
 
                                     <!-- Category -->
                                     <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal">
-                                        <avalonia:MaterialIcon Kind="Folder" 
-                                                             VerticalAlignment="Center" 
-                                                             Margin="0,0,5,0"
-                                                             Foreground="{DynamicResource SukiPrimaryColor}" />
-                                        <TextBlock Text="Category:" 
-                                                 VerticalAlignment="Center"
-                                                 FontWeight="Medium" />
+                                        <avalonia:MaterialIcon Kind="Folder"
+                                                               VerticalAlignment="Center"
+                                                               Margin="0,0,5,0"
+                                                               Foreground="{DynamicResource SukiPrimaryColor}" />
+                                        <TextBlock Text="Category:"
+                                                   VerticalAlignment="Center"
+                                                   FontWeight="Medium" />
                                     </StackPanel>
                                     <TextBox Grid.Row="2" Grid.Column="1"
                                              Text="{Binding SoundCommand.Category}"
@@ -140,13 +140,13 @@
                                     <!-- Volume -->
                                     <Grid ColumnDefinitions="120,*">
                                         <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                            <avalonia:MaterialIcon Kind="VolumeHigh" 
-                                                                 VerticalAlignment="Center" 
-                                                                 Margin="0,0,5,0"
-                                                                 Foreground="{DynamicResource SukiPrimaryColor}" />
-                                            <TextBlock Text="Volume:" 
-                                                     VerticalAlignment="Center"
-                                                     FontWeight="Medium" />
+                                            <avalonia:MaterialIcon Kind="VolumeHigh"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,5,0"
+                                                                   Foreground="{DynamicResource SukiPrimaryColor}" />
+                                            <TextBlock Text="Volume:"
+                                                       VerticalAlignment="Center"
+                                                       FontWeight="Medium" />
                                         </StackPanel>
                                         <Grid Grid.Column="1" ColumnDefinitions="Auto,*">
                                             <NumericUpDown Grid.Column="0"
@@ -170,13 +170,13 @@
                                     <!-- Play Chance -->
                                     <Grid ColumnDefinitions="120,*">
                                         <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                            <avalonia:MaterialIcon Kind="Dice6" 
-                                                                 VerticalAlignment="Center" 
-                                                                 Margin="0,0,5,0"
-                                                                 Foreground="{DynamicResource SukiPrimaryColor}" />
-                                            <TextBlock Text="Play Chance:" 
-                                                     VerticalAlignment="Center"
-                                                     FontWeight="Medium" />
+                                            <avalonia:MaterialIcon Kind="Dice6"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,5,0"
+                                                                   Foreground="{DynamicResource SukiPrimaryColor}" />
+                                            <TextBlock Text="Play Chance:"
+                                                       VerticalAlignment="Center"
+                                                       FontWeight="Medium" />
                                         </StackPanel>
                                         <Grid Grid.Column="1" ColumnDefinitions="Auto,*">
                                             <NumericUpDown Grid.Column="0"
@@ -196,17 +196,17 @@
                                                     IsSnapToTickEnabled="True" />
                                         </Grid>
                                     </Grid>
-                                    
+
                                     <!-- Cooldown -->
                                     <Grid ColumnDefinitions="120,*">
                                         <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                            <avalonia:MaterialIcon Kind="Clock" 
-                                                                 VerticalAlignment="Center" 
-                                                                 Margin="0,0,5,0"
-                                                                 Foreground="{DynamicResource SukiPrimaryColor}" />
-                                            <TextBlock Text="Cooldown:" 
-                                                     VerticalAlignment="Center"
-                                                     FontWeight="Medium" />
+                                            <avalonia:MaterialIcon Kind="Clock"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,5,0"
+                                                                   Foreground="{DynamicResource SukiPrimaryColor}" />
+                                            <TextBlock Text="Cooldown:"
+                                                       VerticalAlignment="Center"
+                                                       FontWeight="Medium" />
                                         </StackPanel>
                                         <Grid Grid.Column="1" ColumnDefinitions="Auto,*">
                                             <NumericUpDown Grid.Column="0"
@@ -235,17 +235,17 @@
                             <controls:GroupBox>
                                 <controls:GroupBox.Header>
                                     <StackPanel Orientation="Horizontal">
-                                        <avalonia:MaterialIcon Kind="FileMusic" 
-                                                             VerticalAlignment="Center" 
-                                                             Margin="0,0,8,0"
-                                                             Foreground="{DynamicResource SukiPrimaryColor}" />
-                                        <TextBlock Text="Sound Files" 
-                                                   FontWeight="Bold" 
+                                        <avalonia:MaterialIcon Kind="FileMusic"
+                                                               VerticalAlignment="Center"
+                                                               Margin="0,0,8,0"
+                                                               Foreground="{DynamicResource SukiPrimaryColor}" />
+                                        <TextBlock Text="Sound Files"
+                                                   FontWeight="Bold"
                                                    FontSize="14"
                                                    VerticalAlignment="Center" />
                                     </StackPanel>
                                 </controls:GroupBox.Header>
-                                
+
                                 <StackPanel>
                                     <!-- Header -->
                                     <Grid ColumnDefinitions="*,150,100"
@@ -304,14 +304,16 @@
                                                                 HorizontalAlignment="Center">
                                                             <Button.Content>
                                                                 <StackPanel Orientation="Horizontal">
-                                                                    <avalonia:MaterialIcon Kind="Delete" 
-                                                                                         Margin="0,0,3,0"
-                                                                                         Foreground="{DynamicResource SukiDangerColor}" />
+                                                                    <avalonia:MaterialIcon Kind="Delete"
+                                                                        Margin="0,0,3,0"
+                                                                        Foreground="{DynamicResource SukiDangerColor}" />
                                                                     <TextBlock Text="Remove" />
                                                                 </StackPanel>
                                                             </Button.Content>
                                                             <Button.Command>
-                                                                <Binding Path="((vm:EditSoundCommandDialogViewModel)DataContext).RemoveSoundFileCommand" RelativeSource="{RelativeSource AncestorType=suki:SukiWindow}" />
+                                                                <Binding
+                                                                    Path="((vm:EditSoundCommandDialogViewModel)DataContext).RemoveSoundFileCommand"
+                                                                    RelativeSource="{RelativeSource AncestorType=suki:SukiWindow}" />
                                                             </Button.Command>
                                                             <Button.CommandParameter>
                                                                 <Binding />

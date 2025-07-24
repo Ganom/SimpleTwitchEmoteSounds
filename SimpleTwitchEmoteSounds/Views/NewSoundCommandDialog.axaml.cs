@@ -1,8 +1,10 @@
-﻿using Avalonia;
-using Avalonia.Controls;
+﻿#region
+
 using Avalonia.Markup.Xaml;
 using SimpleTwitchEmoteSounds.ViewModels;
 using SukiUI.Controls;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Views;
 

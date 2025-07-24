@@ -1,15 +1,17 @@
+#region
+
 using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Collections.ObjectModel;
 using Newtonsoft.Json;
 using Serilog;
-using SharpHook.Data;
 using SimpleTwitchEmoteSounds.Data;
 using SimpleTwitchEmoteSounds.Data.Entities;
 using SimpleTwitchEmoteSounds.Models;
-using SimpleTwitchEmoteSounds.Services;
+using MatchType = SimpleTwitchEmoteSounds.Models.MatchType;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Services.Migration;
 
@@ -19,7 +21,10 @@ public class JsonToDbMigrationService
     private readonly IAudioPlaybackService _audioPlaybackService;
     private readonly string _settingsFolder;
 
-    public JsonToDbMigrationService(AppDbContext context, IAudioPlaybackService audioPlaybackService)
+    public JsonToDbMigrationService(
+        AppDbContext context,
+        IAudioPlaybackService audioPlaybackService
+    )
     {
         _context = context;
         _audioPlaybackService = audioPlaybackService;
@@ -31,7 +36,9 @@ public class JsonToDbMigrationService
         Log.Information("Checking if migration should run...");
         _context.Database.EnsureCreated();
 
-        var hasJsonFiles = File.Exists(Path.Combine(_settingsFolder, "sounds.json")) || File.Exists(Path.Combine(_settingsFolder, "user_state.json"));
+        var hasJsonFiles =
+            File.Exists(Path.Combine(_settingsFolder, "sounds.json"))
+            || File.Exists(Path.Combine(_settingsFolder, "user_state.json"));
         Log.Debug("JSON files exist: {HasJsonFiles}", hasJsonFiles);
 
         var hasDbData = _context.AppSettings.Any() || _context.UserStates.Any();
@@ -71,7 +78,10 @@ public class JsonToDbMigrationService
 
     public void MigrateFromSpecificFile(string soundsJsonPath)
     {
-        Log.Information("Starting manual migration from specific sounds.json file: {FilePath}", soundsJsonPath);
+        Log.Information(
+            "Starting manual migration from specific sounds.json file: {FilePath}",
+            soundsJsonPath
+        );
 
         try
         {
@@ -117,53 +127,75 @@ public class JsonToDbMigrationService
 
         if (appSettings == null)
         {
-            Log.Error("Failed to deserialize sounds.json or the file is empty. Skipping AppSettings migration.");
+            Log.Error(
+                "Failed to deserialize sounds.json or the file is empty. Skipping AppSettings migration."
+            );
             return;
         }
 
-        Log.Information("Successfully deserialized sounds.json. Migrating {Count} sound commands.", appSettings.SoundCommands.Count);
+        Log.Information(
+            "Successfully deserialized sounds.json. Migrating {Count} sound commands.",
+            appSettings.SoundCommands.Count
+        );
 
         var entity = new AppSettingsEntity
         {
             Id = 1,
             EnableHotkeyData = JsonConvert.SerializeObject(appSettings.EnableHotkey),
-            SoundCommands = appSettings.SoundCommands.Select(sc => new SoundCommandEntity
-            {
-                Name = sc.Name,
-                Category = sc.Category,
-                Enabled = sc.Enabled,
-                IsExpanded = sc.IsExpanded,
-                PlayChance = sc.PlayChance,
-                SelectedMatchType = (int)sc.SelectedMatchType,
-                Volume = sc.Volume,
-                TimesPlayed = sc.TimesPlayed,
-                CooldownSeconds = sc.CooldownSeconds,
-                AppSettingsId = 1,
-                SoundFiles = sc.SoundFiles.Select(sf =>
+            SoundCommands = appSettings
+                .SoundCommands.Select(sc => new SoundCommandEntity
                 {
-                    var fileName = sf.FileName;
-
-                    if (!string.IsNullOrEmpty(sf.FilePath) && sf.FilePath != sf.FileName && File.Exists(sf.FilePath))
-                    {
-                        try
+                    Name = sc.Name,
+                    Category = sc.Category,
+                    Enabled = sc.Enabled,
+                    IsExpanded = sc.IsExpanded,
+                    PlayChance = sc.PlayChance,
+                    SelectedMatchType = (int)sc.SelectedMatchType,
+                    Volume = sc.Volume,
+                    TimesPlayed = sc.TimesPlayed,
+                    CooldownSeconds = sc.CooldownSeconds,
+                    AppSettingsId = 1,
+                    SoundFiles = sc
+                        .SoundFiles.Select(sf =>
                         {
-                            fileName = CopyFileToManagedStorage(sf.FilePath);
-                            Log.Information("Migrated audio file: {OldPath} -> {NewFileName}", sf.FilePath, fileName);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Warning(ex, "Failed to migrate audio file {FilePath}, keeping original filename {FileName}", sf.FilePath, sf.FileName);
-                            fileName = sf.FileName;
-                        }
-                    }
+                            var fileName = sf.FileName;
 
-                    return new SoundFileEntity
-                    {
-                        FileName = fileName,
-                        Percentage = sf.Percentage
-                    };
-                }).ToList()
-            }).ToList()
+                            if (
+                                !string.IsNullOrEmpty(sf.FilePath)
+                                && sf.FilePath != sf.FileName
+                                && File.Exists(sf.FilePath)
+                            )
+                            {
+                                try
+                                {
+                                    fileName = CopyFileToManagedStorage(sf.FilePath);
+                                    Log.Information(
+                                        "Migrated audio file: {OldPath} -> {NewFileName}",
+                                        sf.FilePath,
+                                        fileName
+                                    );
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.Warning(
+                                        ex,
+                                        "Failed to migrate audio file {FilePath}, keeping original filename {FileName}",
+                                        sf.FilePath,
+                                        sf.FileName
+                                    );
+                                    fileName = sf.FileName;
+                                }
+                            }
+
+                            return new SoundFileEntity
+                            {
+                                FileName = fileName,
+                                Percentage = sf.Percentage,
+                            };
+                        })
+                        .ToList(),
+                })
+                .ToList(),
         };
 
         _context.AppSettings.Add(entity);
@@ -173,7 +205,7 @@ public class JsonToDbMigrationService
     private void MigrateAppSettingsFromFile(string soundsFilePath)
     {
         Log.Information("Starting AppSettings migration from file: {FilePath}", soundsFilePath);
-        
+
         if (!File.Exists(soundsFilePath))
         {
             Log.Error("Specified sounds.json file not found: {FilePath}", soundsFilePath);
@@ -186,53 +218,78 @@ public class JsonToDbMigrationService
 
         if (appSettings == null)
         {
-            Log.Error("Failed to deserialize sounds.json or the file is empty: {FilePath}", soundsFilePath);
-            throw new InvalidOperationException($"Failed to deserialize sounds.json: {soundsFilePath}");
+            Log.Error(
+                "Failed to deserialize sounds.json or the file is empty: {FilePath}",
+                soundsFilePath
+            );
+            throw new InvalidOperationException(
+                $"Failed to deserialize sounds.json: {soundsFilePath}"
+            );
         }
 
-        Log.Information("Successfully deserialized sounds.json. Migrating {Count} sound commands.", appSettings.SoundCommands.Count);
+        Log.Information(
+            "Successfully deserialized sounds.json. Migrating {Count} sound commands.",
+            appSettings.SoundCommands.Count
+        );
 
         var entity = new AppSettingsEntity
         {
             Id = 1,
             EnableHotkeyData = JsonConvert.SerializeObject(appSettings.EnableHotkey),
-            SoundCommands = appSettings.SoundCommands.Select(sc => new SoundCommandEntity
-            {
-                Name = sc.Name,
-                Category = sc.Category,
-                Enabled = sc.Enabled,
-                IsExpanded = sc.IsExpanded,
-                PlayChance = sc.PlayChance,
-                SelectedMatchType = (int)sc.SelectedMatchType,
-                Volume = sc.Volume,
-                TimesPlayed = sc.TimesPlayed,
-                CooldownSeconds = sc.CooldownSeconds,
-                AppSettingsId = 1,
-                SoundFiles = sc.SoundFiles.Select(sf =>
+            SoundCommands = appSettings
+                .SoundCommands.Select(sc => new SoundCommandEntity
                 {
-                    var fileName = sf.FileName;
-
-                    if (!string.IsNullOrEmpty(sf.FilePath) && sf.FilePath != sf.FileName && File.Exists(sf.FilePath))
-                    {
-                        try
+                    Name = sc.Name,
+                    Category = sc.Category,
+                    Enabled = sc.Enabled,
+                    IsExpanded = sc.IsExpanded,
+                    PlayChance = sc.PlayChance,
+                    SelectedMatchType = (int)sc.SelectedMatchType,
+                    Volume = sc.Volume,
+                    TimesPlayed = sc.TimesPlayed,
+                    CooldownSeconds = sc.CooldownSeconds,
+                    AppSettingsId = 1,
+                    SoundFiles = sc
+                        .SoundFiles.Select(sf =>
                         {
-                            fileName = CopyFileToManagedStorage(sf.FilePath);
-                            Log.Information("Migrated audio file: {OldPath} -> {NewFileName}", sf.FilePath, fileName);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Warning(ex, "Failed to migrate audio file {FilePath}, keeping original filename {FileName}", sf.FilePath, sf.FileName);
-                            fileName = sf.FileName;
-                        }
-                    }
+                            var fileName = sf.FileName;
 
-                    return new SoundFileEntity
-                    {
-                        FileName = fileName,
-                        Percentage = sf.Percentage
-                    };
-                }).ToList()
-            }).ToList()
+                            if (
+                                !string.IsNullOrEmpty(sf.FilePath)
+                                && sf.FilePath != sf.FileName
+                                && File.Exists(sf.FilePath)
+                            )
+                            {
+                                try
+                                {
+                                    fileName = CopyFileToManagedStorage(sf.FilePath);
+                                    Log.Information(
+                                        "Migrated audio file: {OldPath} -> {NewFileName}",
+                                        sf.FilePath,
+                                        fileName
+                                    );
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.Warning(
+                                        ex,
+                                        "Failed to migrate audio file {FilePath}, keeping original filename {FileName}",
+                                        sf.FilePath,
+                                        sf.FileName
+                                    );
+                                    fileName = sf.FileName;
+                                }
+                            }
+
+                            return new SoundFileEntity
+                            {
+                                FileName = fileName,
+                                Percentage = sf.Percentage,
+                            };
+                        })
+                        .ToList(),
+                })
+                .ToList(),
         };
 
         _context.AppSettings.Add(entity);
@@ -255,11 +312,16 @@ public class JsonToDbMigrationService
 
         if (userState == null)
         {
-            Log.Error("Failed to deserialize user_state.json or the file is empty. Skipping UserState migration.");
+            Log.Error(
+                "Failed to deserialize user_state.json or the file is empty. Skipping UserState migration."
+            );
             return;
         }
 
-        Log.Information("Successfully deserialized user_state.json for user: {Username}", userState.Username);
+        Log.Information(
+            "Successfully deserialized user_state.json for user: {Username}",
+            userState.Username
+        );
 
         var entity = new UserStateEntity
         {
@@ -268,7 +330,7 @@ public class JsonToDbMigrationService
             Height = userState.Height,
             Width = userState.Width,
             PosX = userState.PosX,
-            PosY = userState.PosY
+            PosY = userState.PosY,
         };
 
         _context.UserStates.Add(entity);
@@ -282,11 +344,7 @@ public class JsonToDbMigrationService
         Directory.CreateDirectory(backupFolder);
         Log.Debug("Backup directory is {BackupFolder}", backupFolder);
 
-        var files = new[]
-        {
-            "sounds.json",
-            "user_state.json"
-        };
+        var files = new[] { "sounds.json", "user_state.json" };
         foreach (var file in files)
         {
             var sourcePath = Path.Combine(_settingsFolder, file);
@@ -295,7 +353,11 @@ public class JsonToDbMigrationService
                 var backupPath = Path.Combine(backupFolder, $"{file}.backup");
                 File.Copy(sourcePath, backupPath, true);
                 File.Delete(sourcePath);
-                Log.Information("Backed up {SourceFile} to {BackupFile} and removed original.", file, backupPath);
+                Log.Information(
+                    "Backed up {SourceFile} to {BackupFile} and removed original.",
+                    file,
+                    backupPath
+                );
             }
             else
             {
@@ -352,7 +414,7 @@ internal class LegacySoundCommand
     public bool Enabled { get; set; } = true;
     public bool IsExpanded { get; set; } = true;
     public string PlayChance { get; set; } = "1";
-    public SimpleTwitchEmoteSounds.Models.MatchType SelectedMatchType { get; set; } = SimpleTwitchEmoteSounds.Models.MatchType.StartsWith;
+    public MatchType SelectedMatchType { get; set; } = MatchType.StartsWith;
     public string Volume { get; set; } = "1";
     public int TimesPlayed { get; set; }
     public string CooldownSeconds { get; set; } = "0";

@@ -1,4 +1,4 @@
-﻿namespace SimpleTwitchEmoteSounds.Services.Core;
+﻿#region
 
 using System;
 using System.Diagnostics;
@@ -9,6 +9,10 @@ using Serilog;
 using Velopack;
 using Velopack.Locators;
 using Velopack.Sources;
+
+#endregion
+
+namespace SimpleTwitchEmoteSounds.Services.Core;
 
 public interface IUpdateService
 {

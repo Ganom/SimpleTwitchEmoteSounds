@@ -1,4 +1,6 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
@@ -9,6 +11,8 @@ using SimpleTwitchEmoteSounds.Services.Core;
 using SukiUI.Dialogs;
 using SukiUI.Toasts;
 using Velopack;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.ViewModels;
 

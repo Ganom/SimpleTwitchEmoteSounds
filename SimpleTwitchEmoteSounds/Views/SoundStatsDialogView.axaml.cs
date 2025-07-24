@@ -1,18 +1,24 @@
-﻿using Avalonia;
-using Avalonia.Controls;
+﻿#region
+
 using Avalonia.Markup.Xaml;
-using Microsoft.Extensions.DependencyInjection;
 using SimpleTwitchEmoteSounds.Services.Database;
 using SimpleTwitchEmoteSounds.ViewModels;
 using SukiUI.Controls;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Views;
 
 public partial class SoundStatsDialogView : SukiWindow
 {
-    public SoundStatsDialogView(DatabaseConfigService configService)
+    public SoundStatsDialogView()
     {
         InitializeComponent();
+    }
+
+    public SoundStatsDialogView(DatabaseConfigService configService)
+        : this()
+    {
         DataContext = new SoundStatsDialogViewModel(configService);
         ((SoundStatsDialogViewModel)DataContext).CloseRequested += ViewModel_CloseRequested;
     }

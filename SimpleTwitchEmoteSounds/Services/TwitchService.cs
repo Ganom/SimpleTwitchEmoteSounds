@@ -1,10 +1,14 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MiniTwitch.Irc;
 using MiniTwitch.Irc.Interfaces;
 using MiniTwitch.Irc.Models;
 using Serilog;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Services;
 
@@ -97,7 +101,9 @@ public class TwitchService
 
     private ValueTask ChannelJoinEvent(IrcChannel channel)
     {
-        Log.Information($"Channel joined: {channel.Name}, we're in {_client.JoinedChannels.Count} channels");
+        Log.Information(
+            $"Channel joined: {channel.Name}, we're in {_client.JoinedChannels.Count} channels"
+        );
         return ValueTask.CompletedTask;
     }
 
@@ -123,5 +129,5 @@ public enum TwitchStatus
 {
     Disconnected,
     Connected,
-    Reconnecting
+    Reconnecting,
 }

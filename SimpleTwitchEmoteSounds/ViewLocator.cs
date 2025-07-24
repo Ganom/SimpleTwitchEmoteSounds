@@ -1,10 +1,12 @@
-using System;
+#region
+
 using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using CommunityToolkit.Mvvm.ComponentModel;
 using SimpleTwitchEmoteSounds.Common;
-using SimpleTwitchEmoteSounds.ViewModels;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds;
 
@@ -36,8 +38,5 @@ public class ViewLocator(AppViews views) : IDataTemplate
 
     public bool Match(object? data) => data is ObservableObject;
 
-    private static TextBlock CreateText(string text) => new TextBlock
-    {
-        Text = text
-    };
+    private static TextBlock CreateText(string text) => new TextBlock { Text = text };
 }

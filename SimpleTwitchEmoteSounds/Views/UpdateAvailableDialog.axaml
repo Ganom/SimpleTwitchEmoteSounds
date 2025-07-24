@@ -44,8 +44,8 @@
             <!-- Release Info -->
             <StackPanel Orientation="Horizontal" Spacing="20" HorizontalAlignment="Center">
                 <TextBlock Text="{Binding PackageSize, StringFormat='Size: {0}'}"
-                           Foreground="{DynamicResource SukiLowText}" 
-                           FontSize="24"/>
+                           Foreground="{DynamicResource SukiLowText}"
+                           FontSize="24" />
             </StackPanel>
         </StackPanel>
 
@@ -53,7 +53,7 @@
         <controls:GlassCard>
             <controls:GroupBox Header="Release Patch Notes">
                 <StackPanel Classes="HeaderContent">
-                    <mdxaml:MarkdownScrollViewer 
+                    <mdxaml:MarkdownScrollViewer
                         MaxHeight="300"
                         Markdown="{Binding ReleaseNotes}"
                         Margin="10">

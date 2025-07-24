@@ -1,5 +1,9 @@
+#region
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Data.Entities;
 
@@ -8,10 +12,10 @@ public class SoundFileEntity
 {
     [Key]
     public int Id { get; set; }
-    
+
     public string FileName { get; set; } = string.Empty;
     public string Percentage { get; set; } = "1";
-    
+
     public int SoundCommandId { get; set; }
     public SoundCommandEntity SoundCommand { get; set; } = null!;
 }

@@ -1,8 +1,12 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Common;
 
@@ -12,7 +16,8 @@ public static class Debouncer
 
     public static void Debounce(string uniqueKey, Action action, int milliseconds = 300)
     {
-        var token = Tokens.AddOrUpdate(uniqueKey,
+        var token = Tokens.AddOrUpdate(
+            uniqueKey,
             _ => new CancellationTokenSource(),
             (_, existingToken) =>
             {
@@ -21,11 +26,17 @@ public static class Debouncer
             }
         );
 
-        Task.Delay(milliseconds, token.Token).ContinueWith(task =>
-        {
-            if (task.IsCanceled) return;
-            Dispatcher.UIThread.InvokeAsync(action);
-            if (Tokens.TryRemove(uniqueKey, out var cts)) cts.Dispose();
-        }, token.Token);
+        Task.Delay(milliseconds, token.Token)
+            .ContinueWith(
+                task =>
+                {
+                    if (task.IsCanceled)
+                        return;
+                    Dispatcher.UIThread.InvokeAsync(action);
+                    if (Tokens.TryRemove(uniqueKey, out var cts))
+                        cts.Dispose();
+                },
+                token.Token
+            );
     }
 }

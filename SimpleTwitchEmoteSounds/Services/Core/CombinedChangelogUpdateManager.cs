@@ -1,6 +1,4 @@
-﻿using SimpleTwitchEmoteSounds.Common;
-
-namespace SimpleTwitchEmoteSounds.Services.Core;
+﻿#region
 
 using System;
 using System.Collections.Generic;
@@ -8,9 +6,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NuGet.Versioning;
+using SimpleTwitchEmoteSounds.Common;
 using Velopack;
 using Velopack.Locators;
 using Velopack.Sources;
+
+#endregion
+
+namespace SimpleTwitchEmoteSounds.Services.Core;
 
 public class ExtendedUpdateInfo(
     VelopackAsset targetFullRelease,

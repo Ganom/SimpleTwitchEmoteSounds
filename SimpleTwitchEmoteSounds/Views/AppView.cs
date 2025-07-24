@@ -1,10 +1,14 @@
-﻿using System;
+﻿#region
+
+using System;
 using Avalonia;
 using Avalonia.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using SimpleTwitchEmoteSounds.Models;
 using SimpleTwitchEmoteSounds.Services.Database;
-using Microsoft.Extensions.DependencyInjection;
 using SukiUI.Controls;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Views;
 
@@ -14,13 +18,16 @@ public partial class AppView : SukiWindow
 
     public AppView()
     {
-        _configService = ((App)Application.Current!).Services!.GetRequiredService<DatabaseConfigService>();
+        _configService = (
+            (App)Application.Current!
+        ).Services!.GetRequiredService<DatabaseConfigService>();
 
         InitializeComponent();
         Width = Settings.Width;
         Height = Settings.Height;
 
-        if (Settings.PosX != -1 && Settings.PosY != -1) Position = new PixelPoint(Settings.PosX, Settings.PosY);
+        if (Settings.PosX != -1 && Settings.PosY != -1)
+            Position = new PixelPoint(Settings.PosX, Settings.PosY);
 
         SizeChanged += OnSizeChanged;
         PositionChanged += OnPositionChanged;

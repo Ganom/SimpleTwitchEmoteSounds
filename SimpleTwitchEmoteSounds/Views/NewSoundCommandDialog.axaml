@@ -25,57 +25,57 @@
     <Design.DataContext>
         <vm:NewSoundCommandDialogViewModel />
     </Design.DataContext>
-    
+
     <controls:GlassCard Margin="20">
         <controls:GroupBox>
             <controls:GroupBox.Header>
                 <StackPanel Orientation="Horizontal">
-                    <avalonia:MaterialIcon Kind="Plus" 
-                                         VerticalAlignment="Center" 
-                                         Margin="0,0,8,0"
-                                         Foreground="{DynamicResource SukiPrimaryColor}" />
-                    <TextBlock Text="Create New Sound Command" 
-                               FontWeight="Bold" 
+                    <avalonia:MaterialIcon Kind="Plus"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,8,0"
+                                           Foreground="{DynamicResource SukiPrimaryColor}" />
+                    <TextBlock Text="Create New Sound Command"
+                               FontWeight="Bold"
                                FontSize="16"
                                VerticalAlignment="Center" />
                 </StackPanel>
             </controls:GroupBox.Header>
-            
+
             <StackPanel Spacing="15">
                 <!-- Name Field -->
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                        <avalonia:MaterialIcon Kind="Tag" 
-                                             VerticalAlignment="Center" 
-                                             Margin="0,0,5,0"
-                                             Foreground="{DynamicResource SukiPrimaryColor}" />
+                        <avalonia:MaterialIcon Kind="Tag"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,5,0"
+                                               Foreground="{DynamicResource SukiPrimaryColor}" />
                         <TextBlock Text="Name:" FontWeight="Medium" />
                     </StackPanel>
-                    <TextBox Text="{Binding Name}" 
-                             Watermark="Enter sound command name..." 
+                    <TextBox Text="{Binding Name}"
+                             Watermark="Enter sound command name..."
                              MinHeight="35" />
                 </StackPanel>
-                
+
                 <!-- Category Field -->
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                        <avalonia:MaterialIcon Kind="Folder" 
-                                             VerticalAlignment="Center" 
-                                             Margin="0,0,5,0"
-                                             Foreground="{DynamicResource SukiPrimaryColor}" />
+                        <avalonia:MaterialIcon Kind="Folder"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,5,0"
+                                               Foreground="{DynamicResource SukiPrimaryColor}" />
                         <TextBlock Text="Category:" FontWeight="Medium" />
                     </StackPanel>
-                    <TextBox Text="{Binding Category}" 
-                             Watermark="Enter category (optional)..." 
+                    <TextBox Text="{Binding Category}"
+                             Watermark="Enter category (optional)..."
                              MinHeight="35" />
                 </StackPanel>
-                
+
                 <!-- Action Buttons -->
-                <StackPanel Orientation="Horizontal" 
-                          HorizontalAlignment="Right" 
-                          Spacing="10"
-                          Margin="0,20,0,0">
-                    <Button Command="{Binding CancelCommand}" 
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Spacing="10"
+                            Margin="0,20,0,0">
+                    <Button Command="{Binding CancelCommand}"
                             MinWidth="80"
                             Padding="15,8">
                         <StackPanel Orientation="Horizontal">
@@ -83,7 +83,7 @@
                             <TextBlock Text="Cancel" />
                         </StackPanel>
                     </Button>
-                    <Button Command="{Binding OkCommand}" 
+                    <Button Command="{Binding OkCommand}"
                             Classes="Accent"
                             MinWidth="80"
                             Padding="15,8">

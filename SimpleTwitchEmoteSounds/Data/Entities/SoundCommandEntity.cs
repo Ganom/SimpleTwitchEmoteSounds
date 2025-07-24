@@ -1,6 +1,10 @@
+#region
+
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Data.Entities;
 
@@ -9,7 +13,7 @@ public class SoundCommandEntity
 {
     [Key]
     public int Id { get; set; }
-    
+
     public string Name { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
     public bool Enabled { get; set; } = true;
@@ -19,9 +23,9 @@ public class SoundCommandEntity
     public string Volume { get; set; } = "1";
     public int TimesPlayed { get; set; }
     public string CooldownSeconds { get; set; } = "0";
-    
+
     public int AppSettingsId { get; set; }
     public AppSettingsEntity AppSettings { get; set; } = null!;
-    
+
     public List<SoundFileEntity> SoundFiles { get; set; } = [];
 }

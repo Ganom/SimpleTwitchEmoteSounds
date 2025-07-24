@@ -1,14 +1,21 @@
-﻿using System;
+﻿#region
+
+using System;
 using Avalonia.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.ViewModels;
 
 public partial class NewSoundCommandDialogViewModel : ObservableObject
 {
-    [ObservableProperty] private string _name = string.Empty;
-    [ObservableProperty] private string _category = string.Empty;
+    [ObservableProperty]
+    private string _name = string.Empty;
+
+    [ObservableProperty]
+    private string _category = string.Empty;
 
     [RelayCommand]
     private void Ok()

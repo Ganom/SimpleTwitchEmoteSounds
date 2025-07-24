@@ -1,4 +1,6 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -30,6 +32,8 @@ using SukiUI.Enums;
 using SukiUI.Models;
 using SukiUI.Toasts;
 using Velopack;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.ViewModels;
 
@@ -121,7 +125,7 @@ public partial class AppViewModel : ObservableObject, IDisposable
     {
         var dialog = new SoundStatsDialogView(_configService)
         {
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
         };
         dialog.Show();
         return Task.CompletedTask;
@@ -135,11 +139,7 @@ public partial class AppViewModel : ObservableObject, IDisposable
         try
         {
             var logsPath = AppDataPathService.GetLogsPath();
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = logsPath,
-                UseShellExecute = true
-            });
+            Process.Start(new ProcessStartInfo { FileName = logsPath, UseShellExecute = true });
         }
         catch (Exception ex)
         {
@@ -153,11 +153,7 @@ public partial class AppViewModel : ObservableObject, IDisposable
         try
         {
             var settingsPath = AppDataPathService.GetSettingsPath();
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = settingsPath,
-                UseShellExecute = true
-            });
+            Process.Start(new ProcessStartInfo { FileName = settingsPath, UseShellExecute = true });
         }
         catch (Exception ex)
         {
@@ -206,7 +202,7 @@ public partial class AppViewModel : ObservableObject, IDisposable
                 .GetTopLevel(
                     (
                         (IClassicDesktopStyleApplicationLifetime)
-                        Application.Current!.ApplicationLifetime!
+                            Application.Current!.ApplicationLifetime!
                     ).MainWindow
                 )
                 ?.Clipboard;
@@ -245,18 +241,17 @@ public partial class AppViewModel : ObservableObject, IDisposable
                 return;
             }
 
-            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-            {
-                Title = "Select sounds.json file to import",
-                AllowMultiple = false,
-                FileTypeFilter =
-                [
-                    new FilePickerFileType("JSON Files")
-                    {
-                        Patterns = ["*.json"]
-                    },
-                ]
-            });
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(
+                new FilePickerOpenOptions
+                {
+                    Title = "Select sounds.json file to import",
+                    AllowMultiple = false,
+                    FileTypeFilter =
+                    [
+                        new FilePickerFileType("JSON Files") { Patterns = ["*.json"] },
+                    ],
+                }
+            );
 
             if (files.Count == 0)
                 return;
@@ -270,19 +265,31 @@ public partial class AppViewModel : ObservableObject, IDisposable
                 return;
             }
 
-            ShowToast(NotificationType.Information, "Migration", "Starting migration from sounds.json...");
+            ShowToast(
+                NotificationType.Information,
+                "Migration",
+                "Starting migration from sounds.json..."
+            );
 
             _migrationService.MigrateFromSpecificFile(filePath);
             _configService.ReloadSettingsAfterMigration();
             var dashboardViewModel = AppPages.OfType<DashboardViewModel>().FirstOrDefault();
             dashboardViewModel?.RefreshAfterMigration();
 
-            ShowToast(NotificationType.Success, "Migration Complete", "Successfully imported sounds from sounds.json file");
+            ShowToast(
+                NotificationType.Success,
+                "Migration Complete",
+                "Successfully imported sounds from sounds.json file"
+            );
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error importing sounds.json file");
-            ShowToast(NotificationType.Error, "Import Failed", $"Failed to import sounds.json: {ex.Message}");
+            ShowToast(
+                NotificationType.Error,
+                "Import Failed",
+                $"Failed to import sounds.json: {ex.Message}"
+            );
         }
     }
 
@@ -293,11 +300,7 @@ public partial class AppViewModel : ObservableObject, IDisposable
         {
             const string discordInvite = "https://discord.gg/EgKhdFXnwF";
             Process.Start(
-                new ProcessStartInfo
-                {
-                    FileName = discordInvite,
-                    UseShellExecute = true
-                }
+                new ProcessStartInfo { FileName = discordInvite, UseShellExecute = true }
             );
         }
         catch (Exception ex)
@@ -324,9 +327,7 @@ public partial class AppViewModel : ObservableObject, IDisposable
         DialogManager
             .CreateDialog()
             .WithTitle("About STES")
-            .WithContent(
-                $"Version: {CurrentVersion}\n\nCreated by Ganom"
-            )
+            .WithContent($"Version: {CurrentVersion}\n\nCreated by Ganom")
             .Dismiss()
             .ByClickingBackground()
             .TryShow();
@@ -417,10 +418,7 @@ public partial class AppViewModel : ObservableObject, IDisposable
                 .Dismiss()
                 .ByClicking()
                 .WithActionButton(
-                    new MaterialIcon
-                    {
-                        Kind = MaterialIconKind.Update
-                    },
+                    new MaterialIcon { Kind = MaterialIconKind.Update },
                     _ =>
                     {
                         Dispatcher.UIThread.InvokeAsync(ShowUpdateInfo);
@@ -429,10 +427,7 @@ public partial class AppViewModel : ObservableObject, IDisposable
                     SukiButtonStyles.Flat | SukiButtonStyles.Accent | SukiButtonStyles.Icon
                 )
                 .WithActionButton(
-                    new MaterialIcon
-                    {
-                        Kind = MaterialIconKind.Close
-                    },
+                    new MaterialIcon { Kind = MaterialIconKind.Close },
                     _ => { },
                     true,
                     SukiButtonStyles.Icon
@@ -493,6 +488,8 @@ public partial class AppViewModel : ObservableObject, IDisposable
 
     private static Window GetMainWindow()
     {
-        return ((IClassicDesktopStyleApplicationLifetime)Application.Current!.ApplicationLifetime!).MainWindow!;
+        return (
+            (IClassicDesktopStyleApplicationLifetime)Application.Current!.ApplicationLifetime!
+        ).MainWindow!;
     }
 }

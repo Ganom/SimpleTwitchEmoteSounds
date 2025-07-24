@@ -1,12 +1,15 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using Avalonia.Threading;
 using Serilog;
 using SharpHook;
 using SharpHook.Data;
-using SharpHook.Native;
 using SharpHook.Reactive;
 using SimpleTwitchEmoteSounds.Models;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Services;
 
@@ -27,7 +30,7 @@ public class HotkeyService : IHotkeyService
         KeyCode.VcLeftAlt,
         KeyCode.VcRightAlt,
         KeyCode.VcLeftMeta,
-        KeyCode.VcRightMeta
+        KeyCode.VcRightMeta,
     ];
 
     public HotkeyService()
@@ -71,7 +74,8 @@ public class HotkeyService : IHotkeyService
         {
             if (_isListeningForHotkey)
             {
-                if (ModifierKeys.Contains(e.Data.KeyCode)) return;
+                if (ModifierKeys.Contains(e.Data.KeyCode))
+                    return;
 
                 var combo = new Hotkey(_currentlyPressedKeys);
                 _nextKeyCallback?.Invoke(combo);

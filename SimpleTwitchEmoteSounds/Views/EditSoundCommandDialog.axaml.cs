@@ -1,9 +1,12 @@
-﻿using Avalonia.Controls;
+﻿#region
+
 using Avalonia.Markup.Xaml;
-using SimpleTwitchEmoteSounds.ViewModels;
 using SimpleTwitchEmoteSounds.Models;
 using SimpleTwitchEmoteSounds.Services;
+using SimpleTwitchEmoteSounds.ViewModels;
 using SukiUI.Controls;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.Views;
 
@@ -15,7 +18,10 @@ public partial class EditSoundCommandDialog : SukiWindow
         InitializeComponent();
     }
 
-    public EditSoundCommandDialog(SoundCommand soundCommand, IAudioPlaybackService audioPlaybackService)
+    public EditSoundCommandDialog(
+        SoundCommand soundCommand,
+        IAudioPlaybackService audioPlaybackService
+    )
     {
         InitializeComponent();
         DataContext = new EditSoundCommandDialogViewModel(soundCommand, audioPlaybackService);

@@ -1,7 +1,9 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿#region
+
+using CommunityToolkit.Mvvm.ComponentModel;
+
+#endregion
 
 namespace SimpleTwitchEmoteSounds.ViewModels;
 
-public class ViewModelBase : ObservableObject
-{
-}
+public class ViewModelBase : ObservableObject { }
