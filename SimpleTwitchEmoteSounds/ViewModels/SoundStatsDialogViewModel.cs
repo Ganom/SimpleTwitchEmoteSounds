@@ -131,8 +131,7 @@ public partial class SoundStatsDialogViewModel : ObservableObject
     private void UpdatePieChart()
     {
         var topSounds = GetTopSounds().ToList();
-
-        // Reset color usage tracking
+        
         Array.Fill(_colorInUse, false);
 
         for (var i = 0; i < Math.Max(PieSeries.Count, topSounds.Count); i++)
@@ -154,7 +153,6 @@ public partial class SoundStatsDialogViewModel : ObservableObject
             }
         }
 
-        // Clean up color assignments for sounds no longer in top sounds
         var soundsToRemove = _soundColorIndices.Keys
             .Where(name => topSounds.All(s => s.DisplayName != name))
             .ToList();

@@ -28,8 +28,7 @@ public class DatabaseConfigService
     public DatabaseConfigService(AppDbContext context)
     {
         _context = context;
-
-        // Ensure database is created
+        
         _context.Database.EnsureCreated();
 
         _saveTimer = new Timer(SaveIfDirty, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
@@ -69,7 +68,6 @@ public class DatabaseConfigService
                         sc.SoundFiles.Select(sf => new SoundFile
                         {
                             FileName = sf.FileName,
-                            FilePath = sf.FilePath,
                             Percentage = sf.Percentage
                         })
                     )
@@ -114,7 +112,6 @@ public class DatabaseConfigService
 
     private void SubscribeToChanges()
     {
-        // It's good practice to unsubscribe first to prevent duplicate subscriptions
         UnsubscribeFromChanges();
 
         Settings.PropertyChanged += (_, _) => MarkDirty();
@@ -213,13 +210,11 @@ public class DatabaseConfigService
                 existingCommand.SoundFiles = sc.SoundFiles.Select(sf => new SoundFileEntity
                 {
                     FileName = sf.FileName,
-                    FilePath = sf.FilePath,
                     Percentage = sf.Percentage
                 }).ToList();
             }
             else
             {
-                // Add new command
                 entity.SoundCommands.Add(new SoundCommandEntity
                 {
                     Name = sc.Name,
@@ -235,7 +230,6 @@ public class DatabaseConfigService
                     SoundFiles = sc.SoundFiles.Select(sf => new SoundFileEntity
                     {
                         FileName = sf.FileName,
-                        FilePath = sf.FilePath,
                         Percentage = sf.Percentage
                     }).ToList()
                 });

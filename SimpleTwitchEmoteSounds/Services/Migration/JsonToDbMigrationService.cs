@@ -1,24 +1,29 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Collections.ObjectModel;
 using Newtonsoft.Json;
 using Serilog;
+using SharpHook.Data;
 using SimpleTwitchEmoteSounds.Data;
 using SimpleTwitchEmoteSounds.Data.Entities;
 using SimpleTwitchEmoteSounds.Models;
+using SimpleTwitchEmoteSounds.Services;
 
 namespace SimpleTwitchEmoteSounds.Services.Migration;
 
 public class JsonToDbMigrationService
 {
     private readonly AppDbContext _context;
+    private readonly IAudioPlaybackService _audioPlaybackService;
     private readonly string _settingsFolder;
 
-    public JsonToDbMigrationService(AppDbContext context)
+    public JsonToDbMigrationService(AppDbContext context, IAudioPlaybackService audioPlaybackService)
     {
         _context = context;
-        var appLocation = AppDomain.CurrentDomain.BaseDirectory;
-        _settingsFolder = Path.Combine(appLocation, "Settings");
+        _audioPlaybackService = audioPlaybackService;
+        _settingsFolder = AppDataPathService.GetSettingsPath();
     }
 
     public bool ShouldMigrate()
@@ -76,7 +81,7 @@ public class JsonToDbMigrationService
 
         Log.Debug("Reading AppSettings from {FilePath}", soundsFilePath);
         var jsonContent = File.ReadAllText(soundsFilePath);
-        var appSettings = JsonConvert.DeserializeObject<AppSettings>(jsonContent);
+        var appSettings = JsonConvert.DeserializeObject<LegacyAppSettings>(jsonContent);
 
         if (appSettings == null)
         {
@@ -102,11 +107,29 @@ public class JsonToDbMigrationService
                 TimesPlayed = sc.TimesPlayed,
                 CooldownSeconds = sc.CooldownSeconds,
                 AppSettingsId = 1,
-                SoundFiles = sc.SoundFiles.Select(sf => new SoundFileEntity
+                SoundFiles = sc.SoundFiles.Select(sf =>
                 {
-                    FileName = sf.FileName,
-                    FilePath = sf.FilePath,
-                    Percentage = sf.Percentage
+                    var fileName = sf.FileName;
+
+                    if (!string.IsNullOrEmpty(sf.FilePath) && sf.FilePath != sf.FileName && File.Exists(sf.FilePath))
+                    {
+                        try
+                        {
+                            fileName = CopyFileToManagedStorage(sf.FilePath);
+                            Log.Information("Migrated audio file: {OldPath} -> {NewFileName}", sf.FilePath, fileName);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Warning(ex, "Failed to migrate audio file {FilePath}, keeping original filename {FileName}", sf.FilePath, sf.FileName);
+                            fileName = sf.FileName;
+                        }
+                    }
+
+                    return new SoundFileEntity
+                    {
+                        FileName = fileName,
+                        Percentage = sf.Percentage
+                    };
                 }).ToList()
             }).ToList()
         };
@@ -180,4 +203,63 @@ public class JsonToDbMigrationService
         }
         Log.Information("JSON file backup process completed.");
     }
+
+    private string CopyFileToManagedStorage(string sourceFilePath)
+    {
+        if (!File.Exists(sourceFilePath))
+            throw new FileNotFoundException($"Source file not found: {sourceFilePath}");
+
+        var fileName = Path.GetFileName(sourceFilePath);
+        var uniqueFileName = GetUniqueFileName(fileName);
+        var destinationPath = _audioPlaybackService.GetManagedAudioPath(uniqueFileName);
+
+        File.Copy(sourceFilePath, destinationPath, overwrite: false);
+        Log.Information("Copied audio file to managed storage: {UniqueFileName}", uniqueFileName);
+
+        return uniqueFileName;
+    }
+
+    private string GetUniqueFileName(string originalFileName)
+    {
+        var name = Path.GetFileNameWithoutExtension(originalFileName);
+        var extension = Path.GetExtension(originalFileName);
+        var counter = 1;
+        var fileName = originalFileName;
+
+        while (File.Exists(_audioPlaybackService.GetManagedAudioPath(fileName)))
+        {
+            fileName = $"{name}_{counter}{extension}";
+            counter++;
+        }
+
+        return fileName;
+    }
+}
+
+// Legacy models for migration only
+internal class LegacyAppSettings
+{
+    public Hotkey EnableHotkey { get; set; } = new([]);
+    public ObservableCollection<LegacySoundCommand> SoundCommands { get; set; } = [];
+}
+
+internal class LegacySoundCommand
+{
+    public string Name { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public ObservableCollection<LegacySoundFile> SoundFiles { get; set; } = [];
+    public bool Enabled { get; set; } = true;
+    public bool IsExpanded { get; set; } = true;
+    public string PlayChance { get; set; } = "1";
+    public SimpleTwitchEmoteSounds.Models.MatchType SelectedMatchType { get; set; } = SimpleTwitchEmoteSounds.Models.MatchType.StartsWith;
+    public string Volume { get; set; } = "1";
+    public int TimesPlayed { get; set; }
+    public string CooldownSeconds { get; set; } = "0";
+}
+
+internal class LegacySoundFile
+{
+    public string FileName { get; set; } = string.Empty;
+    public string FilePath { get; set; } = string.Empty;
+    public string Percentage { get; set; } = "1";
 }

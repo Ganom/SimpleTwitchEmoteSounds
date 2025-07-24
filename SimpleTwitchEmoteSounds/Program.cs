@@ -2,6 +2,7 @@
 using System;
 using System.Threading.Tasks;
 using Serilog;
+using SimpleTwitchEmoteSounds.Services;
 
 namespace SimpleTwitchEmoteSounds;
 
@@ -16,7 +17,7 @@ sealed class Program
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
             .WriteTo.Console()
-            .WriteTo.File("Logs/stes-.txt", rollingInterval: RollingInterval.Day)
+            .WriteTo.File(AppDataPathService.GetLogFilePath("stes-.txt"), rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
         AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
