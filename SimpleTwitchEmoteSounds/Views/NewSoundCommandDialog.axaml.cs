@@ -2,10 +2,11 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using SimpleTwitchEmoteSounds.ViewModels;
+using SukiUI.Controls;
 
 namespace SimpleTwitchEmoteSounds.Views;
 
-public partial class NewSoundCommandDialog : Window
+public partial class NewSoundCommandDialog : SukiWindow
 {
     public NewSoundCommandDialog()
     {
