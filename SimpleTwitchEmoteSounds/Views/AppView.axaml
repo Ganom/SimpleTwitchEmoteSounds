@@ -12,7 +12,7 @@
 
     <Window.DataTemplates>
         <DataTemplate DataType="{x:Type viewModels:DashboardViewModel}">
-            <views:MainWindow />
+            <views:DashboardView />
         </DataTemplate>
     </Window.DataTemplates>
 
