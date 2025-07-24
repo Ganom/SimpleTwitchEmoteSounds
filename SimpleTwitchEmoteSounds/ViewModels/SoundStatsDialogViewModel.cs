@@ -10,14 +10,15 @@ using LiveChartsCore.Measure;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SimpleTwitchEmoteSounds.Models;
-using SimpleTwitchEmoteSounds.Services;
 using SkiaSharp;
 using LiveChartsCore.SkiaSharpView.Painting.ImageFilters;
+using SimpleTwitchEmoteSounds.Services.Database;
 
 namespace SimpleTwitchEmoteSounds.ViewModels;
 
 public partial class SoundStatsDialogViewModel : ObservableObject
 {
+    private readonly DatabaseConfigService _configService;
     private const int TopSoundsCount = 10;
 
     private static readonly SolidColorPaint Paint = new(SKColors.White)
@@ -46,13 +47,14 @@ public partial class SoundStatsDialogViewModel : ObservableObject
     public ObservableCollection<ISeries> PieSeries { get; } = [];
 
     public IEnumerable<SoundCommand> SortedSoundCommands =>
-        ConfigService.Settings.SoundCommands
+        _configService.Settings.SoundCommands
             .OrderByDescending(x => x.TimesPlayed);
 
-    public SoundStatsDialogViewModel()
+    public SoundStatsDialogViewModel(DatabaseConfigService configService)
     {
+        _configService = configService;
         UpdatePieChart();
-        ConfigService.Settings.SoundCommandPropertyChanged += (_, _) => UpdatePieChart();
+        _configService.Settings.SoundCommandPropertyChanged += (_, _) => UpdatePieChart();
     }
 
     [RelayCommand]
@@ -72,7 +74,7 @@ public partial class SoundStatsDialogViewModel : ObservableObject
     }
 
     private IEnumerable<SoundCommand> GetTopSounds() =>
-        ConfigService.Settings.SoundCommands
+        _configService.Settings.SoundCommands
             .OrderByDescending(x => x.TimesPlayed)
             .Take(TopSoundsCount)
             .Where(x => x.TimesPlayed > 0);

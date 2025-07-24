@@ -17,6 +17,7 @@ using Serilog;
 using SimpleTwitchEmoteSounds.Extensions;
 using SimpleTwitchEmoteSounds.Models;
 using SimpleTwitchEmoteSounds.Services;
+using SimpleTwitchEmoteSounds.Services.Database;
 using SimpleTwitchEmoteSounds.Views;
 
 // ReSharper disable ClassNeverInstantiated.Global
@@ -26,7 +27,7 @@ namespace SimpleTwitchEmoteSounds.ViewModels;
 
 public partial class DashboardViewModel : ViewModelBase
 {
-    [ObservableProperty] private string _username = ConfigService.State.Username;
+    [ObservableProperty] private string _username;
     [ObservableProperty] private bool _isConnected;
     [ObservableProperty] private string _connectButtonText = "Connect";
     [ObservableProperty] private string _connectButtonColor = "white";
@@ -35,25 +36,29 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private string _toggleButtonText = "Register Hotkey";
     [ObservableProperty] private string _updateButtonText = "v1.3.2";
     [ObservableProperty] private bool _isListening;
-    private static Hotkey ToggleHotkey => ConfigService.Settings.EnableHotkey;
-    private static ObservableCollection<SoundCommand> SoundCommands => ConfigService.Settings.SoundCommands;
+    private Hotkey ToggleHotkey => _configService.Settings.EnableHotkey;
+    private ObservableCollection<SoundCommand> SoundCommands => _configService.Settings.SoundCommands;
     public FilteredObservableCollection<SoundCommand> FilteredSoundCommands { get; }
 
     private readonly TwitchService _twitchService;
     private readonly IHotkeyService _hotkeyService;
+    private readonly DatabaseConfigService _configService;
 
-    public DashboardViewModel(TwitchService twitchService, IHotkeyService hotkeyService)
+    public DashboardViewModel(TwitchService twitchService, IHotkeyService hotkeyService, DatabaseConfigService configService)
     {
         _twitchService = twitchService;
         _hotkeyService = hotkeyService;
+        _configService = configService;
+        
+        Username = _configService.State.Username;
         _twitchService.ConnectionStatus += TwitchServiceConnectionStatus;
         _twitchService.MessageLogged += TwitchServiceMessageLogged;
         _hotkeyService.RegisterHotkey(ToggleHotkey, ToggleEnabled);
         ToggleButtonText = ToggleHotkey.ToString();
 
-        ConfigService.Settings.RefreshSubscriptions();
+        _configService.Settings.RefreshSubscriptions();
         FilteredSoundCommands = new FilteredObservableCollection<SoundCommand>(
-            ConfigService.Settings.SoundCommands,
+            _configService.Settings.SoundCommands,
             v => string.IsNullOrEmpty(SearchText) ||
                  v.DisplayName.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
         );
@@ -131,7 +136,7 @@ public partial class DashboardViewModel : ViewModelBase
 
             SoundCommands.Add(sc);
             FilteredSoundCommands.Refresh();
-            ConfigService.Settings.RefreshSubscriptions();
+            _configService.Settings.RefreshSubscriptions();
         }
     }
 
@@ -154,7 +159,7 @@ public partial class DashboardViewModel : ViewModelBase
         if (result != null)
         {
             FilteredSoundCommands.Refresh();
-            ConfigService.Settings.RefreshSubscriptions();
+            _configService.Settings.RefreshSubscriptions();
         }
     }
 
@@ -169,7 +174,7 @@ public partial class DashboardViewModel : ViewModelBase
         {
             SoundCommands.Remove(soundCommand);
             FilteredSoundCommands.Refresh();
-            ConfigService.Settings.RefreshSubscriptions();
+            _configService.Settings.RefreshSubscriptions();
         }
     }
 
@@ -192,7 +197,7 @@ public partial class DashboardViewModel : ViewModelBase
     private void RegisterHotkey(Hotkey combo)
     {
         _hotkeyService.UnregisterHotkey(ToggleHotkey);
-        ConfigService.Settings.EnableHotkey = combo;
+        _configService.Settings.EnableHotkey = combo;
         _hotkeyService.RegisterHotkey(ToggleHotkey, ToggleEnabled);
         ResetState();
     }
@@ -225,7 +230,7 @@ public partial class DashboardViewModel : ViewModelBase
 
     partial void OnUsernameChanged(string value)
     {
-        ConfigService.State.Username = value;
+        _configService.State.Username = value;
     }
 
     partial void OnSearchTextChanged(string value)

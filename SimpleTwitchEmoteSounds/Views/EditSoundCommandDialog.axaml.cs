@@ -7,6 +7,12 @@ namespace SimpleTwitchEmoteSounds.Views;
 
 public partial class EditSoundCommandDialog : Window
 {
+    // ReSharper disable once UnusedMember.Global
+    public EditSoundCommandDialog()
+    {
+        InitializeComponent();
+    }
+
     public EditSoundCommandDialog(SoundCommand soundCommand)
     {
         InitializeComponent();

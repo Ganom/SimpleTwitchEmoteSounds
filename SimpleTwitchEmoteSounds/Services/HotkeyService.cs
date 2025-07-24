@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Avalonia.Threading;
 using Serilog;
 using SharpHook;
+using SharpHook.Data;
 using SharpHook.Native;
 using SharpHook.Reactive;
 using SimpleTwitchEmoteSounds.Models;
