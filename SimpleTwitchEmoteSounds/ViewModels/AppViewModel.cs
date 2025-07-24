@@ -119,7 +119,7 @@ public partial class AppViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private Task ViewSoundCommandStats()
     {
-        var dialog = new SoundStatsDialogView
+        var dialog = new SoundStatsDialogView(_configService)
         {
             WindowStartupLocation = WindowStartupLocation.CenterOwner
         };

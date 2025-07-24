@@ -10,10 +10,9 @@ namespace SimpleTwitchEmoteSounds.Views;
 
 public partial class SoundStatsDialogView : SukiWindow
 {
-    public SoundStatsDialogView()
+    public SoundStatsDialogView(DatabaseConfigService configService)
     {
         InitializeComponent();
-        var configService = ((App)Application.Current!).Services!.GetRequiredService<DatabaseConfigService>();
         DataContext = new SoundStatsDialogViewModel(configService);
         ((SoundStatsDialogViewModel)DataContext).CloseRequested += ViewModel_CloseRequested;
     }
