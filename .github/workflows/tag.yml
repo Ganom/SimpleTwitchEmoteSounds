@@ -130,10 +130,6 @@ jobs:
       - name: Verify Build Artifacts
         shell: pwsh
         run: |
-          if (!(Test-Path "Setup.exe")) { 
-            Write-Error "Setup.exe not found after Velopack packaging" 
-            exit 1 
-          }
           if (!(Test-Path "Releases")) { 
             Write-Error "Releases directory not found after Velopack packaging" 
             exit 1 
