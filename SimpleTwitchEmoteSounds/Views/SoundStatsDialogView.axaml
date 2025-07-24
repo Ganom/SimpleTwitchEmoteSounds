@@ -1,55 +1,113 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:vm="using:SimpleTwitchEmoteSounds.ViewModels"
-        xmlns:i="using:Avalonia.Xaml.Interactivity"
-        xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
-        xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
-        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
-        x:Class="SimpleTwitchEmoteSounds.Views.SoundStatsDialogView"
-        x:DataType="vm:SoundStatsDialogViewModel"
-        Title="Sound Stats"
-        Width="900"
-        Height="600">
+﻿<suki:SukiWindow xmlns="https://github.com/avaloniaui"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:vm="using:SimpleTwitchEmoteSounds.ViewModels"
+                 xmlns:i="using:Avalonia.Xaml.Interactivity"
+                 xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
+                 xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+                 xmlns:suki="https://github.com/kikipoulet/SukiUI"
+                 xmlns:controls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+                 xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+                 mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="650"
+                 x:Class="SimpleTwitchEmoteSounds.Views.SoundStatsDialogView"
+                 x:DataType="vm:SoundStatsDialogViewModel"
+                 Title="Sound Statistics"
+                 Width="950"
+                 Height="650"
+                 CanResize="True"
+                 BackgroundStyle="Flat"
+                 WindowStartupLocation="CenterOwner">
     <i:Interaction.Behaviors>
         <ia:EventTriggerBehavior EventName="KeyDown">
             <ia:InvokeCommandAction Command="{Binding KeyDownCommand}" PassEventArgsToCommand="True" />
         </ia:EventTriggerBehavior>
     </i:Interaction.Behaviors>
 
-    <Grid ColumnDefinitions="*, *">
-        <DataGrid Grid.Column="0"
-                  ItemsSource="{Binding SortedSoundCommands}"
-                  IsReadOnly="True"
-                  CanUserSortColumns="True"
-                  GridLinesVisibility="All"
-                  Margin="10">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Command"
-                                    Binding="{Binding DisplayName}"
-                                    Width="*" />
-                <DataGridTextColumn Header="Times Played"
-                                    Binding="{Binding TimesPlayed}"
-                                    Width="Auto" />
-                <DataGridTemplateColumn Header="Actions"
-                                        Width="Auto">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Content="Reset"
-                                    Command="{Binding ((vm:SoundStatsDialogViewModel)DataContext).RefreshStatsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                    CommandParameter="{Binding}"
-                                    Margin="20 5 20 5" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+    <Grid ColumnDefinitions="*,450" Margin="20" ColumnSpacing="20">
+        <!-- Statistics Table -->
+        <controls:GlassCard Grid.Column="0">
+            <controls:GroupBox>
+                <controls:GroupBox.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <avalonia:MaterialIcon Kind="ChartLine" 
+                                             VerticalAlignment="Center" 
+                                             Margin="0,0,8,0"
+                                             Foreground="{DynamicResource SukiPrimaryColor}" />
+                        <TextBlock Text="Sound Command Statistics" 
+                                   FontWeight="Bold" 
+                                   FontSize="16"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </controls:GroupBox.Header>
+                
+                <DataGrid ItemsSource="{Binding SortedSoundCommands}"
+                          IsReadOnly="True"
+                          CanUserSortColumns="True"
+                          GridLinesVisibility="Horizontal"
+                          HeadersVisibility="Column"
+                          Background="Transparent"
+                          BorderThickness="0">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Sound Command"
+                                            Binding="{Binding DisplayName}"
+                                            Width="*"
+                                            FontWeight="Medium" />
+                        <DataGridTextColumn Header="Times Played"
+                                            Binding="{Binding TimesPlayed}"
+                                            Width="120" />
+                        <DataGridTemplateColumn Header="Actions" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button HorizontalAlignment="Center"
+                                            Margin="5">
+                                        <Button.Content>
+                                            <StackPanel Orientation="Horizontal">
+                                                <avalonia:MaterialIcon Kind="Refresh" 
+                                                                     Margin="0,0,3,0"
+                                                                     Foreground="{DynamicResource SukiAccentColor}" />
+                                                <TextBlock Text="Reset" />
+                                            </StackPanel>
+                                        </Button.Content>
+                                        <Button.Command>
+                                            <Binding Path="((vm:SoundStatsDialogViewModel)DataContext).RefreshStatsCommand" RelativeSource="{RelativeSource AncestorType=suki:SukiWindow}" />
+                                        </Button.Command>
+                                        <Button.CommandParameter>
+                                            <Binding />
+                                        </Button.CommandParameter>
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </controls:GroupBox>
+        </controls:GlassCard>
 
-        <Border Grid.Column="1"
-                MinHeight="300"
-                MinWidth="300">
-            <lvc:PieChart Series="{Binding PieSeries}"/>
-        </Border>
+        <!-- Chart Section -->
+        <controls:GlassCard Grid.Column="1">
+            <controls:GroupBox>
+                <controls:GroupBox.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <avalonia:MaterialIcon Kind="ChartPie" 
+                                             VerticalAlignment="Center" 
+                                             Margin="0,0,8,0"
+                                             Foreground="{DynamicResource SukiPrimaryColor}" />
+                        <TextBlock Text="Usage Distribution" 
+                                   FontWeight="Bold" 
+                                   FontSize="16"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </controls:GroupBox.Header>
+                
+                <Border MinHeight="400"
+                        MinWidth="350"
+                        CornerRadius="8"
+                        Background="Transparent">
+                    <lvc:PieChart Series="{Binding PieSeries}"
+                                  AnimationsSpeed="00:00:01" />
+                </Border>
+            </controls:GroupBox>
+        </controls:GlassCard>
     </Grid>
-</Window>
+</suki:SukiWindow>

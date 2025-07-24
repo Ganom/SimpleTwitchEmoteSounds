@@ -9,7 +9,7 @@ namespace SimpleTwitchEmoteSounds.Extensions;
 
 public class FilteredObservableCollection<T> : ObservableCollection<T> where T : INotifyPropertyChanged
 {
-    private readonly ObservableCollection<T> _source;
+    private ObservableCollection<T> _source;
     private readonly Func<T, bool> _filter;
 
     public FilteredObservableCollection(ObservableCollection<T> source, Func<T, bool> filter)
@@ -83,6 +83,26 @@ public class FilteredObservableCollection<T> : ObservableCollection<T> where T :
             Remove(item);
         }
 
+        foreach (var item in _source.Where(_filter))
+        {
+            Add(item);
+            item.PropertyChanged += Item_PropertyChanged;
+        }
+    }
+
+    public void UpdateSource(ObservableCollection<T> newSource)
+    {
+        _source.CollectionChanged -= SourceCollectionChanged;
+        
+        foreach (var item in this.ToList())
+        {
+            item.PropertyChanged -= Item_PropertyChanged;
+            Remove(item);
+        }
+        
+        _source = newSource;
+        _source.CollectionChanged += SourceCollectionChanged;
+        
         foreach (var item in _source.Where(_filter))
         {
             Add(item);

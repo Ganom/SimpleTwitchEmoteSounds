@@ -3,10 +3,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:SimpleTwitchEmoteSounds.ViewModels"
+             xmlns:controls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SimpleTwitchEmoteSounds.Views.DashboardView"
              x:DataType="viewModels:DashboardViewModel"
-             xmlns:converters="clr-namespace:SimpleTwitchEmoteSounds.Converters">
+             xmlns:converters="clr-namespace:SimpleTwitchEmoteSounds.Converters"
+             xmlns:models="clr-namespace:SimpleTwitchEmoteSounds.Models">
     <UserControl.Resources>
         <converters:BoolToEnabledDisabledConverter x:Key="BoolToEnabledDisabledConverter" />
         <converters:EnabledToBoxShadowConverter x:Key="EnabledToBoxShadowConverter" />
@@ -14,123 +17,207 @@
     </UserControl.Resources>
 
     <Grid RowDefinitions="Auto,*">
-        <StackPanel Grid.Row="0">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Top"
-                            Orientation="Horizontal"
-                            Margin="20 10 20 10">
+        <StackPanel Grid.Row="0" Spacing="10" Margin="20">
+            <StackPanel Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Margin="5,0">
+                    <avalonia:MaterialIcon Kind="Account"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,5,0"
+                                           Foreground="{DynamicResource SukiPrimaryColor}" />
                     <TextBox Width="200"
+                             Height="40"
+                             VerticalAlignment="Center"
+                             VerticalContentAlignment="Center"
                              Watermark="Enter username"
                              Text="{Binding Username}" />
-                    <Button Content="{Binding ConnectButtonText}"
-                            Command="{Binding ConnectCommand}"
-                            Foreground="{Binding ConnectButtonColor}"
-                            Margin="10,0,0,0"
-                            Width="120" />
-                    <Button Command="{Binding ToggleEnabledCommand}"
-                            Foreground="{Binding EnabledButtonColor}"
-                            Content="{Binding IsEnabled, Converter={StaticResource BoolToEnabledDisabledConverter}}"
-                            Margin="10,0,0,0"
-                            ToolTip.Tip="This is a quick way to enable or disable all sounds at once"
-                            ToolTip.Placement="Bottom"
-                            Width="120" />
-                    <Button Content="{Binding ToggleButtonText}"
-                            Command="{Binding ToggleListeningCommand}"
-                            HorizontalAlignment="Center"
-                            ToolTip.Tip="Click to reassign the hotkey"
-                            ToolTip.Placement="Bottom"
-                            Margin="10,0,0,0" />
-                    <Button Content="{Binding UpdateButtonText}"
-                            Command="{Binding UpdateButtonCommand}"
-                            HorizontalAlignment="Center"
-                            ToolTip.Tip="Click to check for updates"
-                            ToolTip.Placement="Bottom"
-                            Margin="10,0,0,0" />
-                    <Button Content="View Stats"
-                            Command="{Binding ViewSoundCommandStatsCommand}"
-                            HorizontalAlignment="Center"
-                            Margin="10,0,0,0" />
                 </StackPanel>
-            </DockPanel>
-            <Grid ColumnDefinitions="*,Auto"
-                  Margin="20 10 20 10">
-                <TextBox Grid.Column="0"
-                         Text="{Binding SearchText}"
-                         Watermark="Search sounds..."
-                         VerticalAlignment="Center" />
-                <Button Grid.Column="1"
-                        Content="Add New Sound"
+
+                <Button Content="{Binding ConnectButtonText}"
+                        Command="{Binding ConnectCommand}"
+                        Foreground="{Binding ConnectButtonColor}"
+                        Height="40"
+                        VerticalAlignment="Center"
+                        Margin="5,0">
+                    <Button.Template>
+                        <ControlTemplate>
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="5"
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter Content="{TemplateBinding Content}"
+                                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <Button Command="{Binding ToggleEnabledCommand}"
+                        Foreground="{Binding EnabledButtonColor}"
+                        Content="{Binding IsEnabled, Converter={StaticResource BoolToEnabledDisabledConverter}}"
+                        Height="40"
+                        VerticalAlignment="Center"
+                        Margin="5,0"
+                        ToolTip.Tip="This is a quick way to enable or disable all sounds at once"
+                        ToolTip.Placement="Bottom" />
+
+                <Button Content="{Binding ToggleButtonText}"
+                        Command="{Binding ToggleListeningCommand}"
+                        Height="40"
+                        VerticalAlignment="Center"
+                        Margin="5,0"
+                        ToolTip.Tip="Click to reassign the hotkey"
+                        ToolTip.Placement="Bottom" />
+
+                <Button Content="Add New Sound"
                         Command="{Binding OpenStandardDialogCommand}"
-                        Margin="10,0,0,0"
-                        VerticalAlignment="Center" />
+                        Height="40"
+                        VerticalAlignment="Center"
+                        Margin="5,0" />
+            </StackPanel>
+
+            <!-- Search Bar - Aligned with button panel -->
+            <Grid ColumnDefinitions="Auto,*" Margin="10 0">
+                <avalonia:MaterialIcon Kind="Magnify"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,5,0"
+                                       Foreground="{DynamicResource SukiPrimaryColor}"
+                                       Grid.Column="0" />
+                <TextBox Text="{Binding SearchText}"
+                         Watermark="Search sounds..."
+                         Height="40"
+                         VerticalAlignment="Center"
+                         VerticalContentAlignment="Center"
+                         Grid.Column="1" />
             </Grid>
         </StackPanel>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel HorizontalAlignment="Center">
-                <ItemsRepeater HorizontalAlignment="Center"
-                               ItemsSource="{Binding FilteredSoundCommands}"
-                               KeyboardNavigation.TabNavigation="Continue"
-                               Margin="15">
-                    <ItemsRepeater.Layout>
-                        <WrapLayout Orientation="Horizontal" />
-                    </ItemsRepeater.Layout>
-                    <ItemsRepeater.ItemTemplate>
-                        <DataTemplate>
-                            <Border Theme="{StaticResource CardBorder}"
-                                    CornerRadius="5"
-                                    Margin="10"
-                                    Padding="10"
-                                    MinWidth="200"
-                                    Name="Border"
+                <ItemsControl HorizontalAlignment="Center"
+                              ItemsSource="{Binding FilteredSoundCommands}"
+                              KeyboardNavigation.TabNavigation="Continue"
+                              Margin="15">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Margin="0"
+                                       Orientation="Horizontal"
+                                       VerticalAlignment="Top"
+                                       HorizontalAlignment="Center" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.DataTemplates>
+                        <DataTemplate x:DataType="models:SoundCommand">
+                            <Border Margin="10"
+                                    MinWidth="280"
+                                    MaxWidth="400"
                                     HorizontalAlignment="Stretch"
+                                    Name="Border"
+                                    CornerRadius="5"
                                     ToolTip.Tip="{Binding IsMissingSoundFiles, Converter={StaticResource MissingSoundFilesTooltipConverter}}"
                                     ToolTip.Placement="Bottom"
                                     ToolTip.ShowDelay="0">
                                 <Border.BoxShadow>
                                     <MultiBinding Converter="{StaticResource EnabledToBoxShadowConverter}">
                                         <Binding Path="Enabled" />
-                                        <Binding Path="IsMissingSoundFiles" />
-                                        <Binding Path="#Border.IsPointerOver"></Binding>
+                                        <Binding Path="#Border.IsPointerOver" />
                                     </MultiBinding>
                                 </Border.BoxShadow>
                                 <Interaction.Behaviors>
-                                    <EventTriggerBehavior EventName="PointerPressed">
+                                    <EventTriggerBehavior EventName="DoubleTapped">
                                         <InvokeCommandAction
                                             Command="{Binding ((viewModels:DashboardViewModel)DataContext).ToggleSoundCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}" />
                                     </EventTriggerBehavior>
                                 </Interaction.Behaviors>
-                                <StackPanel Orientation="Horizontal">
-                                    <Grid RowDefinitions="Auto,Auto,Auto,*">
-                                        <TextBlock Grid.Column="0" Margin="0 0 0 10"
-                                                   Text="{Binding DisplayName}"
-                                                   FontWeight="Bold"
-                                                   FontSize="20"
-                                                   MaxWidth="220"
-                                                   VerticalAlignment="Center"
-                                                   HorizontalAlignment="Center" />
-                                        <StackPanel Grid.Row="1"
-                                                    Orientation="Horizontal"
-                                                    HorizontalAlignment="Center">
-                                            <Button Content="Preview"
-                                                    Command="{Binding ((viewModels:DashboardViewModel)DataContext).PreviewSoundCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                    CommandParameter="{Binding}"
-                                                    Margin="0,0,10,0" />
-                                            <Button Content="Edit"
-                                                    Command="{Binding ((viewModels:DashboardViewModel)DataContext).EditSoundCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                    CommandParameter="{Binding}"
-                                                    Margin="0,0,10,0" />
-                                            <Button Content="Remove"
-                                                    Command="{Binding ((viewModels:DashboardViewModel)DataContext).RemoveSoundCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                    CommandParameter="{Binding}" />
+
+                                <controls:GlassCard HorizontalAlignment="Stretch"
+                                                    VerticalAlignment="Stretch">
+
+                                    <controls:GroupBox>
+                                        <controls:GroupBox.Header>
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{Binding DisplayName}"
+                                                           FontWeight="Bold"
+                                                           FontSize="18"
+                                                           VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <avalonia:MaterialIcon Grid.Column="1"
+                                                                       Kind="VolumeHigh"
+                                                                       VerticalAlignment="Center"
+                                                                       Foreground="{DynamicResource SukiPrimaryColor}"
+                                                                       IsVisible="{Binding Enabled}" />
+                                            </Grid>
+                                        </controls:GroupBox.Header>
+
+                                        <StackPanel Spacing="10">
+                                            <!-- Action Buttons -->
+                                            <WrapPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                                <Button Margin="3" MinWidth="70">
+                                                    <Button.Content>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <avalonia:MaterialIcon Kind="Play" Margin="0,0,3,0" />
+                                                            <TextBlock Text="Preview" />
+                                                        </StackPanel>
+                                                    </Button.Content>
+                                                    <Button.Command>
+                                                        <Binding
+                                                            Path="((viewModels:DashboardViewModel)DataContext).PreviewSoundCommand"
+                                                            RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                                                    </Button.Command>
+                                                    <Button.CommandParameter>
+                                                        <Binding />
+                                                    </Button.CommandParameter>
+                                                </Button>
+
+                                                <Button Margin="3" MinWidth="70" Classes="Accent">
+                                                    <Button.Content>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <avalonia:MaterialIcon Kind="Edit" Margin="0,0,3,0" />
+                                                            <TextBlock Text="Edit" />
+                                                        </StackPanel>
+                                                    </Button.Content>
+                                                    <Button.Command>
+                                                        <Binding
+                                                            Path="((viewModels:DashboardViewModel)DataContext).EditSoundCommand"
+                                                            RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                                                    </Button.Command>
+                                                    <Button.CommandParameter>
+                                                        <Binding />
+                                                    </Button.CommandParameter>
+                                                </Button>
+
+                                                <Button Margin="3" MinWidth="70">
+                                                    <Button.Content>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <avalonia:MaterialIcon Kind="Delete"
+                                                                Margin="0,0,3,0"
+                                                                Foreground="{DynamicResource SukiDangerColor}" />
+                                                            <TextBlock Text="Remove" />
+                                                        </StackPanel>
+                                                    </Button.Content>
+                                                    <Button.Command>
+                                                        <Binding
+                                                            Path="((viewModels:DashboardViewModel)DataContext).RemoveSoundCommand"
+                                                            RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                                                    </Button.Command>
+                                                    <Button.CommandParameter>
+                                                        <Binding />
+                                                    </Button.CommandParameter>
+                                                </Button>
+                                            </WrapPanel>
                                         </StackPanel>
-                                    </Grid>
-                                </StackPanel>
+                                    </controls:GroupBox>
+                                </controls:GlassCard>
                             </Border>
                         </DataTemplate>
-                    </ItemsRepeater.ItemTemplate>
-                </ItemsRepeater>
+                    </ItemsControl.DataTemplates>
+                </ItemsControl>
             </StackPanel>
         </ScrollViewer>
     </Grid>

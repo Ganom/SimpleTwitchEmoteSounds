@@ -69,6 +69,38 @@ public class JsonToDbMigrationService
         }
     }
 
+    public void MigrateFromSpecificFile(string soundsJsonPath)
+    {
+        Log.Information("Starting manual migration from specific sounds.json file: {FilePath}", soundsJsonPath);
+
+        try
+        {
+            _context.Database.EnsureCreated();
+
+            // Clear existing data
+            var existingSettings = _context.AppSettings.FirstOrDefault();
+            if (existingSettings != null)
+            {
+                _context.AppSettings.Remove(existingSettings);
+                Log.Information("Cleared existing app settings from database.");
+            }
+
+            // Migrate from the specific file
+            MigrateAppSettingsFromFile(soundsJsonPath);
+
+            Log.Information("Saving changes to the database...");
+            _context.SaveChanges();
+            Log.Information("Changes saved successfully.");
+
+            Log.Information("Manual migration completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred during manual migration.");
+            throw;
+        }
+    }
+
     private void MigrateAppSettings()
     {
         Log.Information("Starting AppSettings migration...");
@@ -87,6 +119,75 @@ public class JsonToDbMigrationService
         {
             Log.Error("Failed to deserialize sounds.json or the file is empty. Skipping AppSettings migration.");
             return;
+        }
+
+        Log.Information("Successfully deserialized sounds.json. Migrating {Count} sound commands.", appSettings.SoundCommands.Count);
+
+        var entity = new AppSettingsEntity
+        {
+            Id = 1,
+            EnableHotkeyData = JsonConvert.SerializeObject(appSettings.EnableHotkey),
+            SoundCommands = appSettings.SoundCommands.Select(sc => new SoundCommandEntity
+            {
+                Name = sc.Name,
+                Category = sc.Category,
+                Enabled = sc.Enabled,
+                IsExpanded = sc.IsExpanded,
+                PlayChance = sc.PlayChance,
+                SelectedMatchType = (int)sc.SelectedMatchType,
+                Volume = sc.Volume,
+                TimesPlayed = sc.TimesPlayed,
+                CooldownSeconds = sc.CooldownSeconds,
+                AppSettingsId = 1,
+                SoundFiles = sc.SoundFiles.Select(sf =>
+                {
+                    var fileName = sf.FileName;
+
+                    if (!string.IsNullOrEmpty(sf.FilePath) && sf.FilePath != sf.FileName && File.Exists(sf.FilePath))
+                    {
+                        try
+                        {
+                            fileName = CopyFileToManagedStorage(sf.FilePath);
+                            Log.Information("Migrated audio file: {OldPath} -> {NewFileName}", sf.FilePath, fileName);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Warning(ex, "Failed to migrate audio file {FilePath}, keeping original filename {FileName}", sf.FilePath, sf.FileName);
+                            fileName = sf.FileName;
+                        }
+                    }
+
+                    return new SoundFileEntity
+                    {
+                        FileName = fileName,
+                        Percentage = sf.Percentage
+                    };
+                }).ToList()
+            }).ToList()
+        };
+
+        _context.AppSettings.Add(entity);
+        Log.Information("AppSettings entity prepared and added to the context.");
+    }
+
+    private void MigrateAppSettingsFromFile(string soundsFilePath)
+    {
+        Log.Information("Starting AppSettings migration from file: {FilePath}", soundsFilePath);
+        
+        if (!File.Exists(soundsFilePath))
+        {
+            Log.Error("Specified sounds.json file not found: {FilePath}", soundsFilePath);
+            throw new FileNotFoundException($"Sounds file not found: {soundsFilePath}");
+        }
+
+        Log.Debug("Reading AppSettings from {FilePath}", soundsFilePath);
+        var jsonContent = File.ReadAllText(soundsFilePath);
+        var appSettings = JsonConvert.DeserializeObject<LegacyAppSettings>(jsonContent);
+
+        if (appSettings == null)
+        {
+            Log.Error("Failed to deserialize sounds.json or the file is empty: {FilePath}", soundsFilePath);
+            throw new InvalidOperationException($"Failed to deserialize sounds.json: {soundsFilePath}");
         }
 
         Log.Information("Successfully deserialized sounds.json. Migrating {Count} sound commands.", appSettings.SoundCommands.Count);

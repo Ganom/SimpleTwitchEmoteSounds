@@ -3,10 +3,11 @@ using Avalonia.Markup.Xaml;
 using SimpleTwitchEmoteSounds.ViewModels;
 using SimpleTwitchEmoteSounds.Models;
 using SimpleTwitchEmoteSounds.Services;
+using SukiUI.Controls;
 
 namespace SimpleTwitchEmoteSounds.Views;
 
-public partial class EditSoundCommandDialog : Window
+public partial class EditSoundCommandDialog : SukiWindow
 {
     // ReSharper disable once UnusedMember.Global
     public EditSoundCommandDialog()

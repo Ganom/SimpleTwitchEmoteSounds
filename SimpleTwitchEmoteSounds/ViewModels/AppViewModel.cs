@@ -10,6 +10,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -20,6 +21,9 @@ using SharpHook.Data;
 using SimpleTwitchEmoteSounds.Models;
 using SimpleTwitchEmoteSounds.Services;
 using SimpleTwitchEmoteSounds.Services.Core;
+using SimpleTwitchEmoteSounds.Services.Database;
+using SimpleTwitchEmoteSounds.Services.Migration;
+using SimpleTwitchEmoteSounds.Views;
 using SukiUI;
 using SukiUI.Dialogs;
 using SukiUI.Enums;
@@ -57,6 +61,8 @@ public partial class AppViewModel : ObservableObject, IDisposable
 
     private readonly PageNavigationService _pageNavigationService;
     private readonly IUpdateService _updateService;
+    private readonly JsonToDbMigrationService _migrationService;
+    private readonly DatabaseConfigService _configService;
 
     private bool _disposed;
     private UpdateInfo? _pendingUpdate;
@@ -67,13 +73,17 @@ public partial class AppViewModel : ObservableObject, IDisposable
         ISukiDialogManager dialogManager,
         ISukiToastManager toastManager,
         IUpdateService updateService,
-        IHotkeyService hotkeyService
+        IHotkeyService hotkeyService,
+        JsonToDbMigrationService migrationService,
+        DatabaseConfigService configService
     )
     {
         DialogManager = dialogManager;
         ToastManager = toastManager;
         _pageNavigationService = pageNavigationService;
         _updateService = updateService;
+        _migrationService = migrationService;
+        _configService = configService;
 
         var viewModelBases = appPages.ToList();
         AppPages = new AvaloniaList<ViewModelBase>(viewModelBases);
@@ -105,6 +115,17 @@ public partial class AppViewModel : ObservableObject, IDisposable
     }
 
     public IAvaloniaReadOnlyList<ViewModelBase> AppPages { get; }
+
+    [RelayCommand]
+    private Task ViewSoundCommandStats()
+    {
+        var dialog = new SoundStatsDialogView
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        dialog.Show();
+        return Task.CompletedTask;
+    }
 
     #region Menu Commands
 
@@ -209,6 +230,59 @@ public partial class AppViewModel : ObservableObject, IDisposable
         {
             Log.Error(ex, "Error copying logs to clipboard");
             ShowToast(NotificationType.Error, "Error", "Failed to copy logs to clipboard");
+        }
+    }
+
+    [RelayCommand]
+    private async Task ImportSoundsJson()
+    {
+        try
+        {
+            var topLevel = TopLevel.GetTopLevel(GetMainWindow());
+            if (topLevel == null)
+            {
+                ShowToast(NotificationType.Error, "Error", "Could not access file dialog");
+                return;
+            }
+
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Select sounds.json file to import",
+                AllowMultiple = false,
+                FileTypeFilter =
+                [
+                    new FilePickerFileType("JSON Files")
+                    {
+                        Patterns = ["*.json"]
+                    },
+                ]
+            });
+
+            if (files.Count == 0)
+                return;
+
+            var selectedFile = files[0];
+            var filePath = selectedFile.Path.LocalPath;
+
+            if (string.IsNullOrEmpty(filePath))
+            {
+                ShowToast(NotificationType.Error, "Error", "Could not access the selected file");
+                return;
+            }
+
+            ShowToast(NotificationType.Information, "Migration", "Starting migration from sounds.json...");
+
+            _migrationService.MigrateFromSpecificFile(filePath);
+            _configService.ReloadSettingsAfterMigration();
+            var dashboardViewModel = AppPages.OfType<DashboardViewModel>().FirstOrDefault();
+            dashboardViewModel?.RefreshAfterMigration();
+
+            ShowToast(NotificationType.Success, "Migration Complete", "Successfully imported sounds from sounds.json file");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error importing sounds.json file");
+            ShowToast(NotificationType.Error, "Import Failed", $"Failed to import sounds.json: {ex.Message}");
         }
     }
 
@@ -415,5 +489,10 @@ public partial class AppViewModel : ObservableObject, IDisposable
             _disposed = true;
             GC.SuppressFinalize(this);
         }
+    }
+
+    private static Window GetMainWindow()
+    {
+        return ((IClassicDesktopStyleApplicationLifetime)Application.Current!.ApplicationLifetime!).MainWindow!;
     }
 }

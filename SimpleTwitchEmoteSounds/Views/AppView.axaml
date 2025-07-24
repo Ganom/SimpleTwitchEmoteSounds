@@ -5,7 +5,7 @@
                  xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
                  xmlns:X="clr-namespace:SukiUI.Helpers.ConditionalXAML;assembly=SukiUI"
                  xmlns:viewModels="clr-namespace:SimpleTwitchEmoteSounds.ViewModels"
-                 Title="Gnome TTS"
+                 Title="SimpleTwitchEmoteSounds"
                  x:DataType="viewModels:AppViewModel"
                  Icon="/Assets/cow.ico"
                  IsMenuVisible="True"
@@ -33,6 +33,13 @@
                       InputGesture="Ctrl+Shift+C">
                 <MenuItem.Icon>
                     <avalonia:MaterialIcon Kind="ContentCopy" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator />
+            <MenuItem Header="Import sounds.json"
+                      Command="{Binding ImportSoundsJsonCommand}">
+                <MenuItem.Icon>
+                    <avalonia:MaterialIcon Kind="Import" />
                 </MenuItem.Icon>
             </MenuItem>
             <Separator />
@@ -69,6 +76,9 @@
                 </MenuItem.Icon>
             </MenuItem>
         </MenuItem>
+        <MenuItem Header="Stats"
+                  Command="{Binding ViewSoundCommandStatsCommand}">
+        </MenuItem>
     </suki:SukiWindow.MenuItems>
 
     <suki:SukiWindow.Hosts>
@@ -81,7 +91,7 @@
                                Height="20"
                                VerticalAlignment="Center"
                                Foreground="{DynamicResource SukiPrimaryColor}"
-                               Kind="TextToSpeech">
+                               Kind="Audio">
             <avalonia:MaterialIcon.Transitions>
                 <Transitions>
                     <BrushTransition Property="Foreground" Duration="{DynamicResource ShortAnimationDuration}" />

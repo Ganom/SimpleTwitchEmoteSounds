@@ -4,10 +4,11 @@ using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleTwitchEmoteSounds.Services.Database;
 using SimpleTwitchEmoteSounds.ViewModels;
+using SukiUI.Controls;
 
 namespace SimpleTwitchEmoteSounds.Views;
 
-public partial class SoundStatsDialogView : Window
+public partial class SoundStatsDialogView : SukiWindow
 {
     public SoundStatsDialogView()
     {
@@ -16,7 +17,7 @@ public partial class SoundStatsDialogView : Window
         DataContext = new SoundStatsDialogViewModel(configService);
         ((SoundStatsDialogViewModel)DataContext).CloseRequested += ViewModel_CloseRequested;
     }
-    
+
     private void InitializeComponent()
     {
         AvaloniaXamlLoader.Load(this);

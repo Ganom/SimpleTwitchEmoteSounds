@@ -231,16 +231,6 @@ public partial class DashboardViewModel : ViewModelBase
         });
     }
 
-    [RelayCommand]
-    private async Task ViewSoundCommandStats()
-    {
-        var dialog = new SoundStatsDialogView
-        {
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
-        };
-        await dialog.ShowDialog(GetMainWindow());
-    }
-
     partial void OnUsernameChanged(string value)
     {
         _configService.State.Username = value;
@@ -373,6 +363,15 @@ public partial class DashboardViewModel : ViewModelBase
         );
 
         return await messageBoxStandardWindow.ShowWindowDialogAsync(GetMainWindow());
+    }
+
+    public void RefreshAfterMigration()
+    {
+        Log.Information("Refreshing DashboardViewModel after migration");
+        Username = _configService.State.Username;
+        FilteredSoundCommands.UpdateSource(_configService.Settings.SoundCommands);
+        FilteredSoundCommands.Refresh();
+        ToggleButtonText = ToggleHotkey.ToString();
     }
 
     private static Window GetMainWindow()
