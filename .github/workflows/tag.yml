@@ -1,35 +1,155 @@
-﻿name: Tag
+﻿name: Build and Package SimpleTwitchEmoteSounds
 
 on:
   push:
     tags:
-      - "v*.*.*"
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  release-tag:
+  build:
     runs-on: windows-latest
-    env:
-      Project_Path: SimpleTwitchEmoteSounds/SimpleTwitchEmoteSounds.csproj
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install .NET
+      - name: Get Version from Tag
+        id: get-version
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".Substring(1)
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: "8.0.x"
 
-      - name: Publish Application
-        run: dotnet publish ${{ env.Project_Path }} -c Release -o ./publish -r win-x64 -p:PublishSingleFile=true -p:DebugType=none -p:PublishReadyToRun=false -p:IncludeNativeLibrariesForSelfExtract=true --self-contained false
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+      - name: Generate Changelog
+        id: changelog
+        uses: actions/github-script@v7
         with:
-          name: SimpleTwitchEmoteSounds
-          path: ./publish
+          script: |
+            const { owner, repo } = context.repo;
+            const tag = context.ref.replace('refs/tags/', '');
 
-      - name: Release
+            // Get the previous tag
+            const tags = await github.rest.repos.listTags({
+              owner,
+              repo,
+              per_page: 100
+            });
+
+            const currentTagIndex = tags.data.findIndex(t => t.name === tag);
+            const previousTag = currentTagIndex < tags.data.length - 1 ? tags.data[currentTagIndex + 1].name : null;
+
+            let changelogContent = `# Release ${tag}\n\n## What's Changed\n\n`;
+
+            if (previousTag) {
+              // Get commits between tags
+              const comparison = await github.rest.repos.compareCommits({
+                owner,
+                repo,
+                base: previousTag,
+                head: tag
+              });
+
+              // Categorize commits
+              const features = [];
+              const fixes = [];
+              const others = [];
+
+              comparison.data.commits.forEach(commit => {
+                const message = commit.commit.message.split('\n')[0];
+                const author = commit.commit.author.name;
+                const login = commit.author?.login || author;
+
+                // Clean up the commit message
+                const cleanMessage = message.replace(/^(feat|fix|docs|style|refactor|test|chore)(\([^)]+\))?:\s*/i, '');
+
+                if (message.toLowerCase().match(/^(feat|add)/)) {
+                  features.push(`- ${cleanMessage} by @${login}`);
+                } else if (message.toLowerCase().match(/^(fix|bug)/)) {
+                  fixes.push(`- ${cleanMessage} by @${login}`);
+                } else {
+                  others.push(`- ${cleanMessage} by @${login}`);
+                }
+              });
+
+              if (features.length > 0) {
+                changelogContent += `### ✨ New Features\n\n`;
+                changelogContent += features.join('\n') + '\n\n';
+              }
+
+              if (fixes.length > 0) {
+                changelogContent += `### 🐛 Bug Fixes\n\n`;
+                changelogContent += fixes.join('\n') + '\n\n';
+              }
+
+              if (others.length > 0) {
+                changelogContent += `### 🔧 Other Changes\n\n`;
+                changelogContent += others.join('\n') + '\n\n';
+              }
+
+              changelogContent += `---\n\n`;
+              changelogContent += `[**Full Changelog**](https://github.com/${owner}/${repo}/compare/${previousTag}...${tag})\n`;
+            } else {
+              changelogContent += `🎉 Initial release of SimpleTwitchEmoteSounds ${tag}\n\n`;
+              changelogContent += `This is the first release of SimpleTwitchEmoteSounds. Welcome!\n`;
+            }
+
+            // Save changelog to file
+            const fs = require('fs');
+            fs.writeFileSync('CHANGELOG.md', changelogContent);
+
+            // Set output for later use (escape newlines for GitHub Actions)
+            const escapedChangelog = changelogContent.replace(/\n/g, '%0A').replace(/\r/g, '%0D');
+            core.setOutput('changelog', escapedChangelog);
+
+            console.log('Generated changelog:');
+            console.log(changelogContent);
+
+      - name: Publish .NET project
+        run: dotnet publish SimpleTwitchEmoteSounds/SimpleTwitchEmoteSounds.csproj -c Release --self-contained -r win-x64 -o ./publish /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishSingleFile=false
+
+      - name: Install Velopack
+        run: dotnet tool install -g vpk
+
+      - name: Download Existing Velopack Releases (if any)
+        run: |
+          vpk download github --repoUrl https://github.com/Ganom/SimpleTwitchEmoteSounds || echo "No existing releases found - this may be the first release"
+
+      - name: Create Velopack Package
+        run: |
+          vpk pack --packId SimpleTwitchEmoteSounds --packVersion ${{ steps.get-version.outputs.version }} --packDir publish --mainExe SimpleTwitchEmoteSounds.exe --packTitle "SimpleTwitchEmoteSounds" --icon ./SimpleTwitchEmoteSounds/cow.ico --releaseNotes CHANGELOG.md
+
+      - name: Verify Build Artifacts
+        shell: pwsh
+        run: |
+          if (!(Test-Path "Setup.exe")) { 
+            Write-Error "Setup.exe not found after Velopack packaging" 
+            exit 1 
+          }
+          if (!(Test-Path "Releases")) { 
+            Write-Error "Releases directory not found after Velopack packaging" 
+            exit 1 
+          }
+          Write-Host "✅ All required artifacts found"
+
+      - name: Upload to GitHub with Velopack
+        run: |
+          vpk upload github --repoUrl https://github.com/Ganom/SimpleTwitchEmoteSounds --publish --releaseName "SimpleTwitchEmoteSounds ${{ github.ref_name }}" --tag ${{ github.ref_name }} --token ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release in Releases Repository
         uses: softprops/action-gh-release@v2
         with:
-          files: ./publish/SimpleTwitchEmoteSounds.exe
-          token: ${{ secrets.STES_TOKEN }}
+          files: |
+            Setup.exe
+            Releases\*
+          generate_release_notes: true
+          name: "SimpleTwitchEmoteSounds ${{ github.ref_name }}"
+          tag_name: ${{ github.ref_name }}
