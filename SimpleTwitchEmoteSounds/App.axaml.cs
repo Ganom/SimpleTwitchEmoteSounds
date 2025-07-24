@@ -10,28 +10,25 @@ using Avalonia.Markup.Xaml;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using SimpleTwitchEmoteSounds.Common;
 using SimpleTwitchEmoteSounds.Data;
 using SimpleTwitchEmoteSounds.Services;
 using SimpleTwitchEmoteSounds.Services.Database;
 using SimpleTwitchEmoteSounds.Services.Migration;
 using SimpleTwitchEmoteSounds.ViewModels;
+using SimpleTwitchEmoteSounds.Views;
 
 namespace SimpleTwitchEmoteSounds;
 
 public class App : Application
 {
-    private IServiceProvider? _provider;
     private DatabaseConfigService? _configService;
 
-    public IServiceProvider? Services => _provider;
+    public IServiceProvider? Services { get; private set; }
 
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
-        _provider = ConfigureServices();
-        _configService = _provider.GetRequiredService<DatabaseConfigService>();
-        var migrationService = _provider.GetRequiredService<JsonToDbMigrationService>();
-        RunMigration(migrationService);
     }
 
     private void RunMigration(JsonToDbMigrationService migrationService)
@@ -57,28 +54,45 @@ public class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var viewLocator = _provider?.GetRequiredService<IDataTemplate>();
-            var appViewModel = _provider?.GetRequiredService<AppViewModel>();
+            var services = new ServiceCollection();
 
-            desktop.MainWindow = viewLocator?.Build(appViewModel) as Window;
+            services.AddSingleton(desktop);
+
+            var views = ConfigureViews(services);
+            Services = ConfigureServices(services);
+
+            DataTemplates.Add(new ViewLocator(views));
+
+            _configService = Services.GetRequiredService<DatabaseConfigService>();
+            var migrationService = Services.GetRequiredService<JsonToDbMigrationService>();
+            RunMigration(migrationService);
+
+            desktop.MainWindow = views.CreateView<AppViewModel>(Services) as Window;
             desktop.Exit += OnExit;
         }
 
         base.OnFrameworkInitializationCompleted();
     }
 
-    private static ServiceProvider ConfigureServices()
+    private static AppViews ConfigureViews(ServiceCollection services)
     {
-        var viewLocator = Current?.DataTemplates.First(x => x is ViewLocator);
-        var services = new ServiceCollection();
+        return new AppViews()
+            //main view
+            .AddView<AppView, AppViewModel>(services)
+            //other views
+            .AddView<DashboardView, DashboardViewModel>(services)
+            .AddView<EditSoundCommandDialog, EditSoundCommandDialogViewModel>(services)
+            .AddView<NewSoundCommandDialog, NewSoundCommandDialogViewModel>(services)
+            .AddView<SoundStatsDialogView, SoundStatsDialogViewModel>(services);
+    }
 
+    private static ServiceProvider ConfigureServices(ServiceCollection services)
+    {
         var dbPath = AppDataPathService.GetSettingsFilePath("app.db");
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite($"Data Source={dbPath}"));
 
-        if (viewLocator is not null)
-            services.AddSingleton(viewLocator);
         services.AddSingleton<DatabaseConfigService>();
         services.AddSingleton<JsonToDbMigrationService>();
         services.AddSingleton<PageNavigationService>();
@@ -86,20 +100,13 @@ public class App : Application
         services.AddSingleton<IHotkeyService, HotkeyService>();
         services.AddSingleton<IAudioPlaybackService, AudioPlaybackService>();
 
-        services.AddSingleton<AppViewModel>();
-        var types = AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(s => s.GetTypes())
-            .Where(p => !p.IsAbstract && typeof(ViewModelBase).IsAssignableFrom(p));
-        foreach (var type in types)
-            services.AddSingleton(typeof(ViewModelBase), type);
-
         return services.BuildServiceProvider();
     }
 
     private void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
         _configService?.SaveAndShutdown().Wait();
-        _provider?.GetRequiredService<IHotkeyService>().Dispose();
-        _provider?.GetRequiredService<IAudioPlaybackService>().Dispose();
+        Services?.GetRequiredService<IHotkeyService>().Dispose();
+        Services?.GetRequiredService<IAudioPlaybackService>().Dispose();
     }
 }
