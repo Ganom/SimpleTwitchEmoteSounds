@@ -39,7 +39,7 @@ internal static class Program
         Log.Logger = logConfig
             .WriteTo.Console()
             .WriteTo.File(
-                AppDataPathService.GetLogFilePath("chat-app-.txt"),
+                AppDataPathService.GetLogFilePath("stes-.txt"),
                 rollingInterval: RollingInterval.Day
             )
             .CreateLogger();
@@ -83,7 +83,7 @@ internal static class Program
         Log.Logger = logConfig
             .WriteTo.Console()
             .WriteTo.File(
-                AppDataPathService.GetLogFilePath("chat-app-update-.txt"),
+                AppDataPathService.GetLogFilePath("stes-update-.txt"),
                 rollingInterval: RollingInterval.Day
             )
             .CreateLogger();
