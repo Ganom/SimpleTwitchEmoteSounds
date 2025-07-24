@@ -125,7 +125,7 @@ jobs:
 
       - name: Create Velopack Package
         run: |
-          vpk pack --packId SimpleTwitchEmoteSounds --packVersion ${{ steps.get-version.outputs.version }} --packDir publish --mainExe SimpleTwitchEmoteSounds.exe --packTitle "SimpleTwitchEmoteSounds" --icon ./SimpleTwitchEmoteSounds/cow.ico --releaseNotes CHANGELOG.md
+          vpk pack --packId SimpleTwitchEmoteSounds --packVersion ${{ steps.get-version.outputs.version }} --packDir publish --mainExe SimpleTwitchEmoteSounds.exe --packTitle "SimpleTwitchEmoteSounds" --icon ./SimpleTwitchEmoteSounds/Assets/cow.ico --releaseNotes CHANGELOG.md
 
       - name: Verify Build Artifacts
         shell: pwsh
