@@ -10,85 +10,89 @@
              d:DesignWidth="800"
              x:DataType="viewModels:UpdateAvailableDialogViewModel"
              mc:Ignorable="d">
-    <StackPanel Spacing="20" Width="600" MaxWidth="600">
 
-        <!-- Header -->
-        <StackPanel Spacing="10">
-            <TextBlock Text="Update Available"
-                       FontSize="24"
-                       FontWeight="Bold"
-                       HorizontalAlignment="Center" />
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                  VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="20" Width="600" MaxWidth="600">
 
-            <Grid ColumnDefinitions="*,Auto,*" Margin="60 0 60 0">
-                <TextBlock Grid.Column="0"
-                           Text="{Binding CurrentVersion}"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           FontSize="24" />
-                <TextBlock Grid.Column="1"
-                           Text="→"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
+            <!-- Header -->
+            <StackPanel Spacing="10">
+                <TextBlock Text="Update Available"
                            FontSize="24"
-                           Margin="10,0"
-                           Foreground="{DynamicResource SukiPrimaryColor}" />
-                <TextBlock Grid.Column="2"
-                           Text="{Binding TargetVersion}"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           FontSize="24"
-                           FontWeight="Medium"
-                           Foreground="{DynamicResource SukiPrimaryColor}" />
-            </Grid>
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center" />
 
-            <!-- Release Info -->
-            <StackPanel Orientation="Horizontal" Spacing="20" HorizontalAlignment="Center">
-                <TextBlock Text="{Binding PackageSize, StringFormat='Size: {0}'}"
-                           Foreground="{DynamicResource SukiLowText}"
-                           FontSize="24" />
+                <Grid ColumnDefinitions="*,Auto,*" Margin="60 0 60 0">
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding CurrentVersion}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="24" />
+                    <TextBlock Grid.Column="1"
+                               Text="→"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="24"
+                               Margin="10,0"
+                               Foreground="{DynamicResource SukiPrimaryColor}" />
+                    <TextBlock Grid.Column="2"
+                               Text="{Binding TargetVersion}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="24"
+                               FontWeight="Medium"
+                               Foreground="{DynamicResource SukiPrimaryColor}" />
+                </Grid>
+
+                <!-- Release Info -->
+                <StackPanel Orientation="Horizontal" Spacing="20" HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding PackageSize, StringFormat='Size: {0}'}"
+                               Foreground="{DynamicResource SukiLowText}"
+                               FontSize="24" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Release Notes -->
+            <controls:GlassCard>
+                <controls:GroupBox Header="Release Patch Notes">
+                    <StackPanel Classes="HeaderContent">
+                        <mdxaml:MarkdownScrollViewer
+                            MaxHeight="300"
+                            Markdown="{Binding ReleaseNotes}"
+                            Margin="10">
+                        </mdxaml:MarkdownScrollViewer>
+                    </StackPanel>
+                </controls:GroupBox>
+            </controls:GlassCard>
+
+            <!-- Progress Section -->
+            <StackPanel IsVisible="{Binding IsDownloading}" Spacing="15">
+                <controls:CircleProgressBar IsIndeterminate="False"
+                                            StrokeWidth="15"
+                                            Value="{Binding ProgressValue}"
+                                            Width="100"
+                                            Height="100"
+                                            HorizontalAlignment="Center">
+                    <TextBlock Margin="0,2,0,0"
+                               IsVisible="{Binding IsTextVisible}"
+                               Text="{Binding ProgressValue, StringFormat={}{0:F0}%}" />
+                </controls:CircleProgressBar>
+            </StackPanel>
+
+            <!-- Action Buttons -->
+            <StackPanel Orientation="Horizontal"
+                        Spacing="15"
+                        HorizontalAlignment="Center"
+                        Margin="0,10"
+                        IsVisible="{Binding !IsDownloading}">
+                <Button Content="Update Now"
+                        Command="{Binding AcceptUpdateCommand}"
+                        Classes="Accent"
+                        Padding="20,10" />
+                <Button Content="Not Now"
+                        Command="{Binding DeclineUpdateCommand}"
+                        Padding="20,10" />
             </StackPanel>
         </StackPanel>
-
-        <!-- Release Notes -->
-        <controls:GlassCard>
-            <controls:GroupBox Header="Release Patch Notes">
-                <StackPanel Classes="HeaderContent">
-                    <mdxaml:MarkdownScrollViewer
-                        MaxHeight="300"
-                        Markdown="{Binding ReleaseNotes}"
-                        Margin="10">
-                    </mdxaml:MarkdownScrollViewer>
-                </StackPanel>
-            </controls:GroupBox>
-        </controls:GlassCard>
-
-        <!-- Progress Section -->
-        <StackPanel IsVisible="{Binding IsDownloading}" Spacing="15">
-            <controls:CircleProgressBar IsIndeterminate="False"
-                                        StrokeWidth="15"
-                                        Value="{Binding ProgressValue}"
-                                        Width="100"
-                                        Height="100"
-                                        HorizontalAlignment="Center">
-                <TextBlock Margin="0,2,0,0"
-                           IsVisible="{Binding IsTextVisible}"
-                           Text="{Binding ProgressValue, StringFormat={}{0:F0}%}" />
-            </controls:CircleProgressBar>
-        </StackPanel>
-
-        <!-- Action Buttons -->
-        <StackPanel Orientation="Horizontal"
-                    Spacing="15"
-                    HorizontalAlignment="Center"
-                    Margin="0,10"
-                    IsVisible="{Binding !IsDownloading}">
-            <Button Content="Update Now"
-                    Command="{Binding AcceptUpdateCommand}"
-                    Classes="Accent"
-                    Padding="20,10" />
-            <Button Content="Not Now"
-                    Command="{Binding DeclineUpdateCommand}"
-                    Padding="20,10" />
-        </StackPanel>
-    </StackPanel>
+    </ScrollViewer>
 </UserControl>

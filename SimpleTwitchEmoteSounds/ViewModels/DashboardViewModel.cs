@@ -9,18 +9,18 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MiniTwitch.Irc.Models;
-using MsBox.Avalonia;
-using MsBox.Avalonia.Enums;
 using Serilog;
 using SimpleTwitchEmoteSounds.Extensions;
 using SimpleTwitchEmoteSounds.Models;
 using SimpleTwitchEmoteSounds.Services;
 using SimpleTwitchEmoteSounds.Services.Database;
 using SimpleTwitchEmoteSounds.Views;
+using SukiUI.Dialogs;
 
 #endregion
 
@@ -66,18 +66,21 @@ public partial class DashboardViewModel : ViewModelBase
     private readonly IHotkeyService _hotkeyService;
     private readonly DatabaseConfigService _configService;
     private readonly IAudioPlaybackService _audioPlaybackService;
+    private readonly ISukiDialogManager _dialogManager;
 
     public DashboardViewModel(
         TwitchService twitchService,
         IHotkeyService hotkeyService,
         DatabaseConfigService configService,
-        IAudioPlaybackService audioPlaybackService
+        IAudioPlaybackService audioPlaybackService,
+        ISukiDialogManager dialogManager
     )
     {
         _twitchService = twitchService;
         _hotkeyService = hotkeyService;
         _configService = configService;
         _audioPlaybackService = audioPlaybackService;
+        _dialogManager = dialogManager;
 
         Username = _configService.State.Username;
         _twitchService.ConnectionStatus += TwitchServiceConnectionStatus;
@@ -164,7 +167,11 @@ public partial class DashboardViewModel : ViewModelBase
                 var managedFileName = await _audioPlaybackService.CopyToManagedAudio(
                     f.Path.LocalPath
                 );
-                sc.SoundFiles.Add(new SoundFile { FileName = managedFileName, Percentage = "1" });
+                sc.SoundFiles.Add(new SoundFile
+                {
+                    FileName = managedFileName,
+                    Percentage = "1"
+                });
             }
 
             SoundCommands.Add(sc);
@@ -199,12 +206,17 @@ public partial class DashboardViewModel : ViewModelBase
     [RelayCommand]
     private async Task RemoveSound(SoundCommand soundCommand)
     {
-        var result = await ShowConfirmationDialog(
-            "Remove Sound",
-            $"Are you sure you want to remove the sound '{soundCommand.Name}'?"
-        );
+        var task = _dialogManager.CreateDialog()
+            .OfType(NotificationType.Warning)
+            .WithTitle("Remove Sound")
+            .WithContent($"Are you sure you want to remove the sound '{soundCommand.Name}'?")
+            .WithYesNoResult("Yes", "No")
+            .Dismiss().ByClickingBackground()
+            .TryShowAsync();
 
-        if (result == ButtonResult.Yes)
+        var result = await task;
+
+        if (result)
         {
             SoundCommands.Remove(soundCommand);
             FilteredSoundCommands.Refresh();
@@ -239,6 +251,13 @@ public partial class DashboardViewModel : ViewModelBase
     [RelayCommand]
     private void ToggleSound(SoundCommand soundCommand)
     {
+        var focusedElement = GetMainWindow().FocusManager?.GetFocusedElement();
+
+        if (focusedElement is Button)
+        {
+            return;
+        }
+
         soundCommand.Enabled = !soundCommand.Enabled;
     }
 
@@ -246,7 +265,10 @@ public partial class DashboardViewModel : ViewModelBase
     private void UpdateButton()
     {
         const string url = "https://github.com/Ganom/SimpleTwitchEmoteSounds/releases";
-        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        Process.Start(new ProcessStartInfo(url)
+        {
+            UseShellExecute = true
+        });
     }
 
     partial void OnUsernameChanged(string value)
@@ -377,19 +399,6 @@ public partial class DashboardViewModel : ViewModelBase
         IsListening = false;
         ToggleButtonText = ToggleHotkey.ToString();
         _hotkeyService.StopListeningForNextKey();
-    }
-
-    private static async Task<ButtonResult> ShowConfirmationDialog(string title, string message)
-    {
-        var messageBoxStandardWindow = MessageBoxManager.GetMessageBoxStandard(
-            title,
-            message,
-            ButtonEnum.YesNo,
-            Icon.Question,
-            WindowStartupLocation.CenterOwner
-        );
-
-        return await messageBoxStandardWindow.ShowWindowDialogAsync(GetMainWindow());
     }
 
     public void RefreshAfterMigration()

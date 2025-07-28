@@ -10,6 +10,8 @@
                  Icon="/Assets/cow.ico"
                  IsMenuVisible="True"
                  BackgroundAnimationEnabled="False"
+                 MinWidth="745"
+                 MinHeight="360"
                  BackgroundStyle="Flat">
 
     <suki:SukiWindow.MenuItems>

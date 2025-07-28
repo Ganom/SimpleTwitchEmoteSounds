@@ -16,8 +16,6 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Material.Icons;
-using Material.Icons.Avalonia;
 using Serilog;
 using SharpHook.Data;
 using SimpleTwitchEmoteSounds.Models;
@@ -27,6 +25,7 @@ using SimpleTwitchEmoteSounds.Services.Database;
 using SimpleTwitchEmoteSounds.Services.Migration;
 using SimpleTwitchEmoteSounds.Views;
 using SukiUI;
+using SukiUI.Controls;
 using SukiUI.Dialogs;
 using SukiUI.Enums;
 using SukiUI.Models;
@@ -70,6 +69,7 @@ public partial class AppViewModel : ObservableObject, IDisposable
 
     private bool _disposed;
     private UpdateInfo? _pendingUpdate;
+    private ISukiToast _currentToast = new SukiToast();
 
     public AppViewModel(
         IEnumerable<ViewModelBase> appPages,
@@ -114,6 +114,7 @@ public partial class AppViewModel : ObservableObject, IDisposable
             );
 
         _updateService.UpdateAvailable += OnUpdateAvailable;
+        _updateService.UpdateError += OnUpdateError;
         CurrentVersion = _updateService.CurrentVersion?.ToString() ?? "Unknown";
         UpdateVersionButtonText();
     }
@@ -139,7 +140,11 @@ public partial class AppViewModel : ObservableObject, IDisposable
         try
         {
             var logsPath = AppDataPathService.GetLogsPath();
-            Process.Start(new ProcessStartInfo { FileName = logsPath, UseShellExecute = true });
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = logsPath,
+                UseShellExecute = true
+            });
         }
         catch (Exception ex)
         {
@@ -153,7 +158,11 @@ public partial class AppViewModel : ObservableObject, IDisposable
         try
         {
             var settingsPath = AppDataPathService.GetSettingsPath();
-            Process.Start(new ProcessStartInfo { FileName = settingsPath, UseShellExecute = true });
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = settingsPath,
+                UseShellExecute = true
+            });
         }
         catch (Exception ex)
         {
@@ -202,7 +211,7 @@ public partial class AppViewModel : ObservableObject, IDisposable
                 .GetTopLevel(
                     (
                         (IClassicDesktopStyleApplicationLifetime)
-                            Application.Current!.ApplicationLifetime!
+                        Application.Current!.ApplicationLifetime!
                     ).MainWindow
                 )
                 ?.Clipboard;
@@ -248,7 +257,10 @@ public partial class AppViewModel : ObservableObject, IDisposable
                     AllowMultiple = false,
                     FileTypeFilter =
                     [
-                        new FilePickerFileType("JSON Files") { Patterns = ["*.json"] },
+                        new FilePickerFileType("JSON Files")
+                        {
+                            Patterns = ["*.json"]
+                        },
                     ],
                 }
             );
@@ -300,7 +312,11 @@ public partial class AppViewModel : ObservableObject, IDisposable
         {
             const string discordInvite = "https://discord.gg/EgKhdFXnwF";
             Process.Start(
-                new ProcessStartInfo { FileName = discordInvite, UseShellExecute = true }
+                new ProcessStartInfo
+                {
+                    FileName = discordInvite,
+                    UseShellExecute = true
+                }
             );
         }
         catch (Exception ex)
@@ -410,27 +426,46 @@ public partial class AppViewModel : ObservableObject, IDisposable
             PackageSize = FormatBytes(e.UpdateInfo.TargetFullRelease.Size);
             IsUpdateAvailable = true;
             UpdateVersionButtonText();
-            ToastManager
+
+            ToastManager.Dismiss(_currentToast);
+
+            _currentToast = ToastManager
                 .CreateToast()
                 .OfType(NotificationType.Information)
                 .WithTitle("Update Available")
                 .WithContent($"Update version {TargetVersion} is available for download!")
-                .Dismiss()
-                .ByClicking()
+                .WithActionButton("Later", _ => { }, true, SukiButtonStyles.Basic)
                 .WithActionButton(
-                    new MaterialIcon { Kind = MaterialIconKind.Update },
+                    "Update",
                     _ =>
                     {
                         Dispatcher.UIThread.InvokeAsync(ShowUpdateInfo);
                     },
-                    true,
-                    SukiButtonStyles.Flat | SukiButtonStyles.Accent | SukiButtonStyles.Icon
+                    true
                 )
+                .Queue();
+        });
+    }
+
+    private void OnUpdateError(object? sender, UpdateErrorEventArgs e)
+    {
+        Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            ToastManager.Dismiss(_currentToast);
+
+            _currentToast = ToastManager
+                .CreateToast()
+                .OfType(NotificationType.Information)
+                .WithTitle("Update Error")
+                .WithContent($"We were unable to grab latest release! {e.Message}")
+                .WithActionButton("Later", _ => { }, true, SukiButtonStyles.Basic)
                 .WithActionButton(
-                    new MaterialIcon { Kind = MaterialIconKind.Close },
-                    _ => { },
-                    true,
-                    SukiButtonStyles.Icon
+                    "Update",
+                    _ =>
+                    {
+                        Dispatcher.UIThread.InvokeAsync(ShowUpdateInfo);
+                    },
+                    true
                 )
                 .Queue();
         });
@@ -478,6 +513,7 @@ public partial class AppViewModel : ObservableObject, IDisposable
         try
         {
             _updateService.UpdateAvailable -= OnUpdateAvailable;
+            _updateService.UpdateError -= OnUpdateError;
         }
         finally
         {

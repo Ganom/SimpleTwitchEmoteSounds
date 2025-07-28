@@ -101,7 +101,7 @@
                 <ItemsControl HorizontalAlignment="Center"
                               ItemsSource="{Binding FilteredSoundCommands}"
                               KeyboardNavigation.TabNavigation="Continue"
-                              Margin="15">
+                              Margin="0">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel Margin="0"
@@ -113,8 +113,7 @@
                     <ItemsControl.DataTemplates>
                         <DataTemplate x:DataType="models:SoundCommand">
                             <Border Margin="10"
-                                    MinWidth="280"
-                                    MaxWidth="400"
+                                    Width="250"
                                     HorizontalAlignment="Stretch"
                                     Name="Border"
                                     CornerRadius="5"
@@ -157,13 +156,16 @@
 
                                         <StackPanel Spacing="10">
                                             <!-- Action Buttons -->
-                                            <WrapPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                                                <Button Margin="3" MinWidth="70">
+                                            <WrapPanel
+                                                HorizontalAlignment="Center"
+                                                Orientation="Horizontal">
+                                                <Button
+                                                    Margin="3"
+                                                    MinWidth="20"
+                                                    ToolTip.Tip="Preview"
+                                                    ToolTip.Placement="Bottom">
                                                     <Button.Content>
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <avalonia:MaterialIcon Kind="Play" Margin="0,0,3,0" />
-                                                            <TextBlock Text="Preview" />
-                                                        </StackPanel>
+                                                        <avalonia:MaterialIcon Kind="Play" Margin="0,0,3,0" />
                                                     </Button.Content>
                                                     <Button.Command>
                                                         <Binding
@@ -175,12 +177,13 @@
                                                     </Button.CommandParameter>
                                                 </Button>
 
-                                                <Button Margin="3" MinWidth="70" Classes="Accent">
+                                                <Button Margin="3"
+                                                        MinWidth="20"
+                                                        Classes="Accent"
+                                                        ToolTip.Tip="Edit"
+                                                        ToolTip.Placement="Bottom">
                                                     <Button.Content>
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <avalonia:MaterialIcon Kind="Edit" Margin="0,0,3,0" />
-                                                            <TextBlock Text="Edit" />
-                                                        </StackPanel>
+                                                        <avalonia:MaterialIcon Kind="Edit" Margin="0,0,3,0" />
                                                     </Button.Content>
                                                     <Button.Command>
                                                         <Binding
@@ -192,14 +195,14 @@
                                                     </Button.CommandParameter>
                                                 </Button>
 
-                                                <Button Margin="3" MinWidth="70">
+                                                <Button Margin="3" MinWidth="20"
+
+                                                        ToolTip.Tip="Remove"
+                                                        ToolTip.Placement="Bottom">
                                                     <Button.Content>
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <avalonia:MaterialIcon Kind="Delete"
-                                                                Margin="0,0,3,0"
-                                                                Foreground="{DynamicResource SukiDangerColor}" />
-                                                            <TextBlock Text="Remove" />
-                                                        </StackPanel>
+                                                        <avalonia:MaterialIcon Kind="Delete"
+                                                                               Margin="0,0,3,0"
+                                                                               Foreground="{DynamicResource SukiDangerColor}" />
                                                     </Button.Content>
                                                     <Button.Command>
                                                         <Binding
