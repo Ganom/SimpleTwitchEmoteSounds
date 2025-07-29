@@ -1,4 +1,4 @@
-name: Build and Package SimpleTwitchEmoteSounds (Cross-Platform)
+name: Build and Package ${{ vars.APP_NAME || 'SimpleTwitchEmoteSounds' }} (Cross-Platform)
 
 on:
   push:
@@ -8,6 +8,11 @@ on:
 
 permissions:
   contents: write
+
+env:
+  APP_NAME: SimpleTwitchEmoteSounds
+  DOTNET_VERSION: "8.0.x"
+  REPO_URL: https://github.com/Ganom/SimpleTwitchEmoteSounds
 
 jobs:
   generate-changelog:
@@ -69,7 +74,7 @@ jobs:
               if (others.length > 0) changelogContent += `### Other Changes\n\n${others.join('\n')}\n\n`;
               changelogContent += `---\n\n[**Full Changelog**](https://github.com/${owner}/${repo}/compare/${previousTag}...${tag})\n`;
             } else {
-              changelogContent += `Initial release of SimpleTwitchEmoteSounds ${tag}\n`;
+              changelogContent += `Initial release of ${{ env.APP_NAME }} ${tag}\n`;
             }
             
             const fs = require('fs');
@@ -93,21 +98,21 @@ jobs:
             platform: windows
             arch: x64
             runtime: win-x64
-            executable: SimpleTwitchEmoteSounds.exe
+            executable: ${{ env.APP_NAME }}.exe
             icon_suffix: ico
             
-          - os: macos-latest
-            platform: macos
-            arch: arm64
-            runtime: osx-arm64
-            executable: SimpleTwitchEmoteSounds
-            icon_suffix: icns
+          #- os: macos-latest
+          #  platform: macos
+          #  arch: arm64
+          #  runtime: osx-arm64
+          #  executable: ${{ env.APP_NAME }}
+          #  icon_suffix: icns
             
           - os: ubuntu-latest
             platform: linux
             arch: x64
             runtime: linux-x64
-            executable: SimpleTwitchEmoteSounds
+            executable: ${{ env.APP_NAME }}
             icon_suffix: png
 
     steps:
@@ -122,7 +127,7 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Import Apple Certificate
         if: matrix.platform == 'macos'
@@ -142,14 +147,15 @@ jobs:
         shell: pwsh
         run: |
           $publishDir = "./publish-${{ matrix.arch }}"
-          dotnet publish SimpleTwitchEmoteSounds/SimpleTwitchEmoteSounds.csproj -c Release --self-contained -r ${{ matrix.runtime }} -o $publishDir /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishSingleFile=false
+          dotnet publish ${{ env.APP_NAME }}/${{ env.APP_NAME }}.csproj -c Release --self-contained -r ${{ matrix.runtime }} -o $publishDir /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishSingleFile=false
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
       - name: Verify Build Structure
         shell: bash
         run: |
           publish_dir="./publish-${{ matrix.arch }}"
-          if [[ -f "$publish_dir/${{ matrix.executable }}" ]]; then
+          executable="${{ env.APP_NAME }}${{ matrix.platform == 'windows' && '.exe' || '' }}"
+          if [[ -f "$publish_dir/$executable" ]]; then
             echo "✅ Main executable found."
           else
             echo "❌ ERROR: Main executable not found in '$publish_dir'!"
@@ -161,15 +167,16 @@ jobs:
         run: dotnet tool install -g vpk
 
       - name: Download Existing Releases
-        run: vpk download github --repoUrl https://github.com/Ganom/SimpleTwitchEmoteSounds --token ${{ secrets.STES_TOKEN }}
+        run: vpk download github --repoUrl ${{ env.REPO_URL }} --token ${{ secrets.STES_TOKEN }}
 
       - name: Create Velopack Release (Windows)
         if: matrix.platform == 'windows'
         shell: pwsh
         run: |
           $publishDir = "./publish-${{ matrix.arch }}"
-          $iconPath = "./SimpleTwitchEmoteSounds/Assets/icon.${{ matrix.icon_suffix }}"
-          $vpkArgs = @("pack", "--packId", "SimpleTwitchEmoteSounds", "--packVersion", "${{ needs.generate-changelog.outputs.version }}", "--packDir", $publishDir, "--mainExe", "${{ matrix.executable }}", "--packTitle", "SimpleTwitchEmoteSounds", "--releaseNotes", "CHANGELOG.md")
+          $iconPath = "./${{ env.APP_NAME }}/Assets/icon.${{ matrix.icon_suffix }}"
+          $executable = "${{ env.APP_NAME }}.exe"
+          $vpkArgs = @("pack", "--packId", "${{ env.APP_NAME }}", "--packVersion", "${{ needs.generate-changelog.outputs.version }}", "--packDir", $publishDir, "--mainExe", $executable, "--packTitle", "${{ env.APP_NAME }}", "--releaseNotes", "CHANGELOG.md")
           if (Test-Path $iconPath) { $vpkArgs += @("--icon", $iconPath) }
           vpk @vpkArgs
 
@@ -178,8 +185,9 @@ jobs:
         shell: bash
         run: |
           publish_dir="./publish-${{ matrix.arch }}"
-          icon_path="./SimpleTwitchEmoteSounds/Assets/icon.${{ matrix.icon_suffix }}"
-          vpk_args=("pack" "--packId" "SimpleTwitchEmoteSounds" "--packVersion" "${{ needs.generate-changelog.outputs.version }}" "--packDir" "$publish_dir" "--mainExe" "${{ matrix.executable }}" "--packTitle" "SimpleTwitchEmoteSounds" "--releaseNotes" "CHANGELOG.md" "--runtime" "${{ matrix.runtime }}")
+          icon_path="./${{ env.APP_NAME }}/Assets/icon.${{ matrix.icon_suffix }}"
+          executable="${{ env.APP_NAME }}"
+          vpk_args=("pack" "--packId" "${{ env.APP_NAME }}" "--packVersion" "${{ needs.generate-changelog.outputs.version }}" "--packDir" "$publish_dir" "--mainExe" "$executable" "--packTitle" "${{ env.APP_NAME }}" "--releaseNotes" "CHANGELOG.md" "--runtime" "${{ matrix.runtime }}")
           if [[ -f "$icon_path" ]]; then vpk_args+=("--icon" "$icon_path"); fi
           
           if [[ "${{ matrix.platform }}" == "macos" ]]; then
@@ -240,7 +248,7 @@ jobs:
           files: ./release-assets/*
           body: ${{ needs.generate-changelog.outputs.changelog }}
           generate_release_notes: true
-          name: "SimpleTwitchEmoteSounds ${{ github.ref_name }}"
+          name: "${{ env.APP_NAME }} ${{ github.ref_name }}"
           tag_name: "${{ github.ref_name }}"
           draft: false
           prerelease: false
