@@ -7,7 +7,7 @@
                  xmlns:viewModels="clr-namespace:SimpleTwitchEmoteSounds.ViewModels"
                  Title="SimpleTwitchEmoteSounds"
                  x:DataType="viewModels:AppViewModel"
-                 Icon="/Assets/cow.ico"
+                 Icon="/Assets/icon.ico"
                  IsMenuVisible="True"
                  BackgroundAnimationEnabled="False"
                  MinWidth="745"
