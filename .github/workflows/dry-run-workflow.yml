@@ -296,4 +296,4 @@ jobs:
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "> [!WARNING]" >> $GITHUB_STEP_SUMMARY
-          > echo "> This was a dry run. Do not distribute these builds." >> $GITHUB_STEP_SUMMARY
+          echo "> This was a dry run. Do not distribute these builds." >> $GITHUB_STEP_SUMMARY
