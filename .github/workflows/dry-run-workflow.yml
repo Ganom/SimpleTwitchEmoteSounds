@@ -193,7 +193,7 @@ jobs:
         run: |
           $publishDir = "./test-publish-${{ matrix.arch }}"
           $iconPath = "./SimpleTwitchEmoteSounds/Assets/icon.${{ matrix.icon_suffix }}"
-          $vpkArgs = @("pack", "--packId", "SimpleTwitchEmoteSounds", "--packVersion", "${{ needs.generate-changelog.outputs.version }}", "--packDir", $publishDir, "--mainExe", "${{ matrix.executable }}", "--packTitle", "SimpleTwitchEmoteSounds (TEST)", "--releaseNotes", "CHANGELOG.md")
+          $vpkArgs = @("pack", "--packId", "SimpleTwitchEmoteSounds", "--packVersion", "${{ needs.generate-test-changelog.outputs.version }}", "--packDir", $publishDir, "--mainExe", "${{ matrix.executable }}", "--packTitle", "SimpleTwitchEmoteSounds (TEST)", "--releaseNotes", "CHANGELOG.md")
           if (Test-Path $iconPath) { $vpkArgs += @("--icon", $iconPath) }
           vpk @vpkArgs
 
@@ -203,7 +203,7 @@ jobs:
         run: |
           publish_dir="./test-publish-${{ matrix.arch }}"
           icon_path="./SimpleTwitchEmoteSounds/Assets/icon.${{ matrix.icon_suffix }}"
-          vpk_args=("pack" "--packId" "SimpleTwitchEmoteSounds" "--packVersion" "${{ needs.generate-changelog.outputs.version }}" "--packDir" "$publish_dir" "--mainExe" "${{ matrix.executable }}" "--packTitle" "SimpleTwitchEmoteSounds (TEST)" "--releaseNotes" "CHANGELOG.md" "--runtime" "${{ matrix.runtime }}")
+          vpk_args=("pack" "--packId" "SimpleTwitchEmoteSounds" "--packVersion" "${{ needs.generate-test-changelog.outputs.version }}" "--packDir" "$publish_dir" "--mainExe" "${{ matrix.executable }}" "--packTitle" "SimpleTwitchEmoteSounds (TEST)" "--releaseNotes" "CHANGELOG.md" "--runtime" "${{ matrix.runtime }}")
           if [[ -f "$icon_path" ]]; then vpk_args+=("--icon" "$icon_path"); fi
           
           if [[ "${{ matrix.platform }}" == "macos" && "${{ github.event.inputs.skip_notarization }}" == "false" ]]; then
@@ -236,8 +236,8 @@ jobs:
           if [ -n "${{ secrets.STES_TOKEN }}" ]; then
             vpk upload github \
               --repoUrl https://github.com/Ganom/SimpleTwitchEmoteSounds \
-              --releaseName "TEST - SimpleTwitchEmoteSounds ${{ needs.generate-changelog.outputs.version }}" \
-              --tag "test-${{ needs.generate-changelog.outputs.version }}" \
+              --releaseName "TEST - SimpleTwitchEmoteSounds ${{ needs.generate-test-changelog.outputs.version }}" \
+              --tag "test-${{ needs.generate-test-changelog.outputs.version }}" \
               --token ${{ secrets.STES_TOKEN }} || echo "WARNING: Upload failed (this is OK for testing)"
           else
             echo "WARNING: STES_TOKEN not available - skipping upload test"
