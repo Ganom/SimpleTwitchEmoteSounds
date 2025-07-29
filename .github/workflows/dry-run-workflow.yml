@@ -52,9 +52,9 @@ jobs:
           
           ### What's Being Tested
           - Build process for all platforms
-          - Velopack packaging
-          - Code signing (if enabled)
-          - Artifact generation
+          - Velopack packaging and cross-platform asset creation
+          - Code signing for macOS (if enabled)
+          - Artifact generation and structure
           - AppImage creation (Linux)
           
           ### Test Configuration
@@ -70,9 +70,6 @@ jobs:
           EOF
           
           changelog_content=$(cat CHANGELOG.md)
-          echo "Generated test changelog:"
-          echo "$changelog_content"
-          
           # Escape for GitHub Actions output
           {
             echo "changelog<<EOF"
@@ -96,67 +93,32 @@ jobs:
         id: set-matrix
         run: |
           platforms="${{ github.event.inputs.platforms_to_test }}"
-          
-          echo "Setting up build matrix for platforms: $platforms"
-          
-          # Initialize empty array
           matrix_configs="[]"
           
-          # Add Windows configuration if requested
           if [[ $platforms == *"windows"* ]]; then
-            echo "Adding Windows x64 to build matrix"
             matrix_configs=$(echo "$matrix_configs" | jq '. += [{
-              "os": "windows-latest",
-              "platform": "windows", 
-              "arch": "x64",
-              "runtime": "win-x64",
-              "executable": "SimpleTwitchEmoteSounds.exe",
-              "setup_name": "TEST-Setup-Windows-x64.exe"
+              "os": "windows-latest", "platform": "windows", "arch": "x64", "runtime": "win-x64", "executable": "SimpleTwitchEmoteSounds.exe", "icon_suffix": "ico", "setup_name": "TEST-Setup-Windows-x64.exe"
             }]')
           fi
           
-          # Add macOS ARM64 configuration if requested
           if [[ $platforms == *"macos-arm64"* ]]; then
-            echo "Adding macOS ARM64 to build matrix"
             matrix_configs=$(echo "$matrix_configs" | jq '. += [{
-              "os": "macos-latest",
-              "platform": "macos",
-              "arch": "arm64",
-              "runtime": "osx-arm64", 
-              "executable": "SimpleTwitchEmoteSounds",
-              "setup_name": "TEST-Setup-macOS-arm64.pkg"
+              "os": "macos-latest", "platform": "macos", "arch": "arm64", "runtime": "osx-arm64", "executable": "SimpleTwitchEmoteSounds", "icon_suffix": "icns", "setup_name": "TEST-Setup-macOS-arm64.pkg"
             }]')
           fi
           
-          # Add Linux x64 configuration if requested
           if [[ $platforms == *"linux"* ]]; then
-            echo "Adding Linux x64 to build matrix"
             matrix_configs=$(echo "$matrix_configs" | jq '. += [{
-              "os": "ubuntu-latest",
-              "platform": "linux",
-              "arch": "x64",
-              "runtime": "linux-x64", 
-              "executable": "SimpleTwitchEmoteSounds",
-              "setup_name": "TEST-SimpleTwitchEmoteSounds-linux-x64.AppImage"
+              "os": "ubuntu-latest", "platform": "linux", "arch": "x64", "runtime": "linux-x64", "executable": "SimpleTwitchEmoteSounds", "icon_suffix": "png", "setup_name": "TEST-SimpleTwitchEmoteSounds-linux-x64.AppImage"
             }]')
           fi
           
           echo "Selected platforms for testing:"
           echo "$matrix_configs" | jq -r '.[] | "  - \(.platform) \(.arch) on \(.os)"'
-          
-          # Create final matrix JSON and escape for GitHub Actions output
           matrix_json=$(echo "{\"include\":$matrix_configs}" | jq -c .)
-          
-          echo "Setting matrix output..."
-          {
-            echo "matrix<<EOF"
-            echo "$matrix_json"
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
-          
-          echo "Matrix configuration complete"
-
-  # Test build matrix
+          echo "matrix=$matrix_json" >> $GITHUB_OUTPUT
+  
+  # Test build job based on the production workflow
   test-build:
     needs: [ generate-test-changelog, setup-matrix ]
     runs-on: ${{ matrix.os }}
@@ -175,23 +137,11 @@ jobs:
         with:
           name: test-changelog
 
-      - name: Display Test Configuration
-        run: |
-          echo "=== DRY RUN TEST CONFIGURATION ==="
-          echo "Platform: ${{ matrix.platform }}"
-          echo "Architecture: ${{ matrix.arch }}"
-          echo "Runtime: ${{ matrix.runtime }}"
-          echo "Test Version: ${{ needs.generate-test-changelog.outputs.version }}"
-          echo "Skip Notarization: ${{ github.event.inputs.skip_notarization }}"
-          echo "Skip Upload: ${{ github.event.inputs.skip_upload }}"
-          echo "=================================="
-
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
 
-      # Apple Certificate Setup (macOS only) - Only if notarization is not skipped
       - name: Import Apple Certificate (Test Mode)
         if: matrix.platform == 'macos' && github.event.inputs.skip_notarization == 'false'
         env:
@@ -200,296 +150,85 @@ jobs:
         run: |
           if [ -n "$APPLE_CERTIFICATE_P12" ]; then
             echo "Setting up Apple certificates for testing..."
-            # Create temporary keychain
             security create-keychain -p temp_password temp.keychain
             security default-keychain -s temp.keychain  
             security unlock-keychain -p temp_password temp.keychain
-          
-            # Import certificate
             echo "$APPLE_CERTIFICATE_P12" | base64 --decode > certificate.p12
             security import certificate.p12 -k temp.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-          
-            # Set keychain settings
             security set-key-partition-list -S apple-tool:,apple: -s -k temp_password temp.keychain
-          
-            # Clean up certificate file
             rm certificate.p12
-            echo "Apple certificates configured"
           else
             echo "WARNING: No Apple certificates configured - signing will be skipped"
           fi
 
-      # Test Build (Windows)
-      - name: Test Build (Windows)
-        if: matrix.platform == 'windows'
+      - name: Test Application Build
         shell: pwsh
         run: |
           $publishDir = "./test-publish-${{ matrix.arch }}"
-          
-          Write-Host "Testing build process for Windows..." -ForegroundColor Yellow
+          Write-Host "Testing build process for ${{ matrix.platform }}..." -ForegroundColor Yellow
           dotnet publish SimpleTwitchEmoteSounds/SimpleTwitchEmoteSounds.csproj -c Release --self-contained -r ${{ matrix.runtime }} -o $publishDir /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishSingleFile=false
-          
           if ($LASTEXITCODE -ne 0) {
               Write-Error "Test build failed!"
               exit 1
           }
-          
-          Write-Host "Windows build test completed successfully" -ForegroundColor Green
-
-      # Test Build (macOS)
-      - name: Test Build (macOS)
-        if: matrix.platform == 'macos'
-        shell: bash
-        run: |
-          publish_dir="./test-publish-${{ matrix.arch }}"
-          
-          echo "Testing build process for macOS..."
-          dotnet publish SimpleTwitchEmoteSounds/SimpleTwitchEmoteSounds.csproj -c Release --self-contained -r ${{ matrix.runtime }} -o "$publish_dir" /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishSingleFile=false
-          
-          if [ $? -ne 0 ]; then
-              echo "Test build failed!"
-              exit 1
-          fi
-          
-          echo "macOS build test completed successfully"
-
-      # Test Build (Linux)
-      - name: Test Build (Linux)
-        if: matrix.platform == 'linux'
-        shell: bash
-        run: |
-          publish_dir="./test-publish-${{ matrix.arch }}"
-          
-          echo "Testing build process for Linux..."
-          dotnet publish SimpleTwitchEmoteSounds/SimpleTwitchEmoteSounds.csproj -c Release --self-contained -r ${{ matrix.runtime }} -o "$publish_dir" /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishSingleFile=false
-          
-          if [ $? -ne 0 ]; then
-              echo "Test build failed!"
-              exit 1
-          fi
-          
-          echo "Linux build test completed successfully"
 
       - name: Verify Test Build Structure
         shell: bash
         run: |
           publish_dir="./test-publish-${{ matrix.arch }}"
-          echo "=== TEST BUILD VERIFICATION ==="
-          echo "Test publish directory contents:"
-          
-          # Fix broken pipe issue
-          if [ -d "$publish_dir" ]; then
-            ls -la "$publish_dir" | head -20 2>/dev/null || ls -la "$publish_dir" 2>/dev/null || echo "Failed to list directory"
+          if [[ -f "$publish_dir/${{ matrix.executable }}" ]]; then
+            echo "✅ Main executable found."
           else
-            echo "ERROR: Publish directory not found: $publish_dir"
+            echo "❌ ERROR: Main executable not found in $publish_dir !"
+            ls -la "$publish_dir"
             exit 1
           fi
-          
-          echo ""
-          echo "Main app executable check:"
-          if [ -f "$publish_dir/${{ matrix.executable }}" ]; then
-            ls -la "$publish_dir/${{ matrix.executable }}"
-            echo "Main executable found"
-          else
-            echo "ERROR: Main executable not found"
-            echo "Available files:"
-            ls -la "$publish_dir" 2>/dev/null | grep -E '\.(exe|dll)$' | head -10 || echo "No executable files found"
-            exit 1
-          fi
-          
-          echo ""
-          echo "Build size information:"
-          du -sh "$publish_dir" 2>/dev/null || echo "Size calculation failed"
-          echo "File count: $(find "$publish_dir" -type f 2>/dev/null | wc -l || echo "unknown")"
 
-      # Install Velopack CLI for testing
       - name: Install Velopack CLI
-        run: |
-          echo "Installing Velopack CLI for testing..."
-          dotnet tool install -g vpk
-          echo "Velopack CLI installed"
+        run: dotnet tool install -g vpk
 
-      # Test Velopack download (only if upload is not skipped)
-      - name: Test Velopack Download
-        if: github.event.inputs.skip_upload == 'false'
-        run: |
-          echo "Testing Velopack download functionality..."
-          if [ -n "${{ secrets.STES_TOKEN }}" ]; then
-            # Add delay to avoid conflicts in matrix builds
-            sleep ${{ strategy.job-index }}
-            vpk download github --repoUrl https://github.com/Ganom/SimpleTwitchEmoteSounds --token ${{ secrets.STES_TOKEN }} || echo "WARNING: Download failed (this is OK for testing)"
-            echo "Download test completed"
-          else
-            echo "WARNING: STES_TOKEN not available - skipping download test"
-          fi
-
-      # Test Velopack Package Creation (Windows)
       - name: Test Velopack Package Creation (Windows)
         if: matrix.platform == 'windows'
         shell: pwsh
         run: |
           $publishDir = "./test-publish-${{ matrix.arch }}"
-          echo "Testing Velopack package creation for Windows..."
-          
-          # Find icon file (ICO for Windows)
-          $iconPath = $null
-          if (Test-Path "./SimpleTwitchEmoteSounds/Assets/icon.ico") {
-            $iconPath = "./SimpleTwitchEmoteSounds/Assets/icon.ico"
-            Write-Host "Found ICO icon at: $iconPath" -ForegroundColor Green
-          } else {
-            Write-Host "WARNING: No ICO icon file found, proceeding without icon" -ForegroundColor Yellow
-          }
-          
-          try {
-            if ($iconPath) {
-              vpk pack --packId SimpleTwitchEmoteSounds --packVersion ${{ needs.generate-test-changelog.outputs.version }} --packDir $publishDir --mainExe ${{ matrix.executable }} --packTitle "SimpleTwitchEmoteSounds (TEST)" --icon $iconPath --releaseNotes CHANGELOG.md
-            } else {
-              vpk pack --packId SimpleTwitchEmoteSounds --packVersion ${{ needs.generate-test-changelog.outputs.version }} --packDir $publishDir --mainExe ${{ matrix.executable }} --packTitle "SimpleTwitchEmoteSounds (TEST)" --releaseNotes CHANGELOG.md
-            }
-            Write-Host "Velopack package created successfully" -ForegroundColor Green
-          } catch {
-            Write-Host "ERROR: Velopack package creation failed: $($_.Exception.Message)" -ForegroundColor Red
-            exit 1
-          }
+          $iconPath = "./SimpleTwitchEmoteSounds/Assets/icon.${{ matrix.icon_suffix }}"
+          $vpkArgs = @("pack", "--packId", "SimpleTwitchEmoteSounds", "--packVersion", "${{ needs.generate-changelog.outputs.version }}", "--packDir", $publishDir, "--mainExe", "${{ matrix.executable }}", "--packTitle", "SimpleTwitchEmoteSounds (TEST)", "--releaseNotes", "CHANGELOG.md")
+          if (Test-Path $iconPath) { $vpkArgs += @("--icon", $iconPath) }
+          vpk @vpkArgs
 
-      # Test Velopack Package Creation (macOS)
-      - name: Test Velopack Package Creation (macOS)
-        if: matrix.platform == 'macos'
+      - name: Test Velopack Package Creation (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
           publish_dir="./test-publish-${{ matrix.arch }}"
-          echo "Testing Velopack package creation for macOS..."
+          icon_path="./SimpleTwitchEmoteSounds/Assets/icon.${{ matrix.icon_suffix }}"
+          vpk_args=("pack" "--packId" "SimpleTwitchEmoteSounds" "--packVersion" "${{ needs.generate-changelog.outputs.version }}" "--packDir" "$publish_dir" "--mainExe" "${{ matrix.executable }}" "--packTitle" "SimpleTwitchEmoteSounds (TEST)" "--releaseNotes" "CHANGELOG.md" "--runtime" "${{ matrix.runtime }}")
+          if [[ -f "$icon_path" ]]; then vpk_args+=("--icon" "$icon_path"); fi
           
-          # Find icon file (ICNS for macOS)
-          icon_path=""
-          if [ -f "./SimpleTwitchEmoteSounds/Assets/icon.icns" ]; then
-            icon_path="./SimpleTwitchEmoteSounds/Assets/icon.icns"
-            echo "Found ICNS icon at: $icon_path"
+          if [[ "${{ matrix.platform }}" == "macos" && "${{ github.event.inputs.skip_notarization }}" == "false" ]]; then
+            APP_SIGNING_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+            INSTALLER_SIGNING_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Installer" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+            if [[ -n "$APP_SIGNING_IDENTITY" && -n "$INSTALLER_SIGNING_IDENTITY" ]]; then
+                echo "🔑 Attempting to sign package for testing..."
+                vpk_args+=("--signAppIdentity" "$APP_SIGNING_IDENTITY" "--signInstallIdentity" "$INSTALLER_SIGNING_IDENTITY")
           else
-            echo "WARNING: No ICNS icon file found, proceeding without icon"
-          fi
-          
-          # Determine signing approach based on test configuration
-          if [ "${{ github.event.inputs.skip_notarization }}" = "true" ]; then
-            echo "Creating unsigned package for testing..."
-            if [ -n "$icon_path" ]; then
-              vpk pack \
-                --packId SimpleTwitchEmoteSounds \
-                --packVersion ${{ needs.generate-test-changelog.outputs.version }} \
-                --packDir "$publish_dir" \
-                --mainExe ${{ matrix.executable }} \
-                --packTitle "SimpleTwitchEmoteSounds (TEST)" \
-                --icon "$icon_path" \
-                --releaseNotes CHANGELOG.md \
-                --runtime ${{ matrix.runtime }}
-            else
-              vpk pack \
-                --packId SimpleTwitchEmoteSounds \
-                --packVersion ${{ needs.generate-test-changelog.outputs.version }} \
-                --packDir "$publish_dir" \
-                --mainExe ${{ matrix.executable }} \
-                --packTitle "SimpleTwitchEmoteSounds (TEST)" \
-                --releaseNotes CHANGELOG.md \
-                --runtime ${{ matrix.runtime }}
-            fi
-          else
-            echo "Creating signed package for testing..."
-            # Try to find actual signing identities from keychain
-            APP_SIGNING_IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)".*/\1/' || echo "Developer ID Application")
-            INSTALLER_SIGNING_IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep "Developer ID Installer" | head -1 | sed 's/.*"\(.*\)".*/\1/' || echo "Developer ID Installer")
-          
-            echo "Using signing identities:"
-            echo "  App: $APP_SIGNING_IDENTITY"
-            echo "  Installer: $INSTALLER_SIGNING_IDENTITY"
-          
-            if [ -n "$icon_path" ]; then
-              vpk pack \
-                --packId SimpleTwitchEmoteSounds \
-                --packVersion ${{ needs.generate-test-changelog.outputs.version }} \
-                --packDir "$publish_dir" \
-                --mainExe ${{ matrix.executable }} \
-                --packTitle "SimpleTwitchEmoteSounds (TEST)" \
-                --icon "$icon_path" \
-                --releaseNotes CHANGELOG.md \
-                --runtime ${{ matrix.runtime }} \
-                --signAppIdentity "$APP_SIGNING_IDENTITY" \
-                --signInstallIdentity "$INSTALLER_SIGNING_IDENTITY" || echo "WARNING: Signing failed (this is OK for testing)"
-            else
-              vpk pack \
-                --packId SimpleTwitchEmoteSounds \
-                --packVersion ${{ needs.generate-test-changelog.outputs.version }} \
-                --packDir "$publish_dir" \
-                --mainExe ${{ matrix.executable }} \
-                --packTitle "SimpleTwitchEmoteSounds (TEST)" \
-                --releaseNotes CHANGELOG.md \
-                --runtime ${{ matrix.runtime }} \
-                --signAppIdentity "$APP_SIGNING_IDENTITY" \
-                --signInstallIdentity "$INSTALLER_SIGNING_IDENTITY" || echo "WARNING: Signing failed (this is OK for testing)"
+                echo "⚠️ Signing requested, but no developer identities were found in the keychain."
             fi
           fi
           
-          echo "Velopack package creation test completed"
+          vpk "${vpk_args[@]}" || echo "WARNING: Velopack packaging failed (this may be acceptable in a dry run)"
 
-      # Test Velopack Package Creation (Linux)
-      - name: Test Velopack Package Creation (Linux)
-        if: matrix.platform == 'linux'
-        run: |
-          publish_dir="./test-publish-${{ matrix.arch }}"
-          echo "Testing Velopack package creation for Linux (AppImage)..."
-          
-          # Find icon file (PNG required for AppImage)
-          icon_path=""
-          if [ -f "./SimpleTwitchEmoteSounds/Assets/icon.png" ]; then
-            icon_path="./SimpleTwitchEmoteSounds/Assets/icon.png"
-            echo "Found PNG icon at: $icon_path"
-          else
-            echo "WARNING: No PNG icon file found, proceeding without icon"
-            echo "Note: PNG icon is required for proper AppImage creation"
-          fi
-          
-          # Create Velopack package for Linux (AppImage)
-          if [ -n "$icon_path" ]; then
-              vpk pack \
-                --packId SimpleTwitchEmoteSounds \
-                --packVersion ${{ needs.generate-test-changelog.outputs.version }} \
-                --packDir "$publish_dir" \
-                --mainExe ${{ matrix.executable }} \
-                --packTitle "SimpleTwitchEmoteSounds (TEST)" \
-                --icon "$icon_path" \
-                --releaseNotes CHANGELOG.md \
-                --runtime ${{ matrix.runtime }} || echo "WARNING: AppImage creation failed (this is OK for testing)"
-          else
-              vpk pack \
-                --packId SimpleTwitchEmoteSounds \
-                --packVersion ${{ needs.generate-test-changelog.outputs.version }} \
-                --packDir "$publish_dir" \
-                --mainExe ${{ matrix.executable }} \
-                --packTitle "SimpleTwitchEmoteSounds (TEST)" \
-                --releaseNotes CHANGELOG.md \
-                --runtime ${{ matrix.runtime }} || echo "WARNING: AppImage creation failed (this is OK for testing)"
-          fi
-          
-          echo "Linux AppImage package creation test completed"
-
-      # Verify Test Package Output
       - name: Verify Test Package Output
         shell: bash
         run: |
-          echo "=== TEST PACKAGE VERIFICATION ==="
-          if [ -d "./Releases" ]; then
-            echo "Test releases directory contents:"
-            ls -la ./Releases/ 2>/dev/null || echo "Failed to list releases"
-            echo ""
-            echo "Package size information:"
-            if ls ./Releases/* 1>/dev/null 2>&1; then
-              du -sh ./Releases/* 2>/dev/null | head -10 || echo "Size calculation failed"
-            else
-              echo "No package files found"
-            fi
+          echo "=== Test Package Verification ==="
+          if [ -d "./Releases" ] && [ "$(ls -A ./Releases)" ]; then
+            ls -la ./Releases/
           else
-            echo "WARNING: No Releases directory found (this might be expected for some test configurations)"
+            echo "WARNING: No packages found in ./Releases directory."
           fi
 
-      # Test Upload (only if not skipped)
       - name: Test Upload to GitHub Releases
         if: github.event.inputs.skip_upload == 'false'
         run: |
@@ -497,109 +236,30 @@ jobs:
           if [ -n "${{ secrets.STES_TOKEN }}" ]; then
             vpk upload github \
               --repoUrl https://github.com/Ganom/SimpleTwitchEmoteSounds \
-              --releaseName "TEST - SimpleTwitchEmoteSounds ${{ needs.generate-test-changelog.outputs.version }}" \
-              --tag "test-${{ needs.generate-test-changelog.outputs.version }}" \
+              --releaseName "TEST - SimpleTwitchEmoteSounds ${{ needs.generate-changelog.outputs.version }}" \
+              --tag "test-${{ needs.generate-changelog.outputs.version }}" \
               --token ${{ secrets.STES_TOKEN }} || echo "WARNING: Upload failed (this is OK for testing)"
-            echo "Upload test completed"
           else
             echo "WARNING: STES_TOKEN not available - skipping upload test"
           fi
 
-      # Create Test Setup Package
-      - name: Create Test Setup Package (Windows)
-        if: matrix.platform == 'windows'
-        shell: pwsh
-        run: |
-          echo "Creating test setup package for Windows..."
-          if (Test-Path "Releases\SimpleTwitchEmoteSounds-${{ needs.generate-test-changelog.outputs.version }}-${{ matrix.runtime }}.exe") {
-            Copy-Item "Releases\SimpleTwitchEmoteSounds-${{ needs.generate-test-changelog.outputs.version }}-${{ matrix.runtime }}.exe" "${{ matrix.setup_name }}"
-            Write-Host "Created test setup: ${{ matrix.setup_name }}" -ForegroundColor Green
-          } elseif (Test-Path "Setup.exe") {
-            Copy-Item "Setup.exe" "${{ matrix.setup_name }}"
-            Write-Host "Created test setup from Setup.exe: ${{ matrix.setup_name }}" -ForegroundColor Green
-          } else {
-            $publishDir = "./test-publish-${{ matrix.arch }}"
-            Compress-Archive -Path "$publishDir\*" -DestinationPath "${{ matrix.setup_name }}.zip"
-            Write-Host "Created fallback test archive: ${{ matrix.setup_name }}.zip" -ForegroundColor Yellow
-          }
-
-      - name: Create Test Setup Package (macOS)
-        if: matrix.platform == 'macos'
-        shell: bash
-        run: |
-          echo "Creating test setup package for macOS..."
-          
-          # Look for the installer package
-          installer_file=$(find ./Releases -name "SimpleTwitchEmoteSounds-${{ needs.generate-test-changelog.outputs.version }}-*.pkg" 2>/dev/null | head -1)
-          
-          if [ -n "$installer_file" ] && [ -f "$installer_file" ]; then
-            cp "$installer_file" "${{ matrix.setup_name }}"
-            echo "Created test setup: ${{ matrix.setup_name }}"
-          else
-            echo "WARNING: No installer package found, creating fallback archive..."
-            tar -czf "${{ matrix.setup_name }}.tar.gz" -C "./test-publish-${{ matrix.arch }}" .
-            echo "Created fallback test archive: ${{ matrix.setup_name }}.tar.gz"
-          fi
-
-      - name: Create Test Setup Package (Linux)
-        if: matrix.platform == 'linux'
-        shell: bash
-        run: |
-          echo "Creating test setup package for Linux..."
-          
-          # Look for the AppImage
-          appimage_file=$(find ./Releases -name "SimpleTwitchEmoteSounds-${{ needs.generate-test-changelog.outputs.version }}-*.AppImage" 2>/dev/null | head -1)
-          
-          if [ -n "$appimage_file" ] && [ -f "$appimage_file" ]; then
-            cp "$appimage_file" "${{ matrix.setup_name }}"
-            echo "Created test AppImage: ${{ matrix.setup_name }}"
-          else
-            echo "WARNING: No AppImage found, creating fallback archive..."
-            tar -czf "${{ matrix.setup_name }}.tar.gz" -C "./test-publish-${{ matrix.arch }}" .
-            echo "Created fallback test archive: ${{ matrix.setup_name }}.tar.gz"
-          fi
-
-      # Upload Test Artifacts
       - name: Upload Test Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: test-build-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
-            ${{ matrix.setup_name }}*
             Releases/*
             test-publish-${{ matrix.arch }}/**/*
           retention-days: 7
 
-      # Test Summary
-      - name: Test Summary
-        shell: bash
-        run: |
-          echo "=== DRY RUN TEST SUMMARY ==="
-          echo "Platform: ${{ matrix.platform }} ${{ matrix.arch }}"
-          echo "Build completed successfully"
-          echo "Velopack packaging tested"
-          if [ "${{ github.event.inputs.skip_notarization }}" = "false" ] && [ "${{ matrix.platform }}" = "macos" ]; then
-            echo "Code signing tested"
-          else
-            echo "Code signing skipped (test mode)"
-          fi
-          if [ "${{ github.event.inputs.skip_upload }}" = "false" ]; then
-            echo "Upload functionality tested"
-          else
-            echo "Upload skipped (test mode)"
-          fi
-          echo "=================================="
-
-      # Cleanup keychain (macOS only)
       - name: Cleanup Test Keychain
         if: always() && matrix.platform == 'macos'
         run: |
           security delete-keychain temp.keychain 2>/dev/null || true
-          echo "Test keychain cleanup completed"
 
-  # Test Release Summary
+  # Final summary job
   test-release-summary:
-    needs: [ generate-test-changelog, setup-matrix, test-build ]
+    needs: [ generate-test-changelog, test-build ]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -610,41 +270,30 @@ jobs:
           path: ./test-artifacts
 
       - name: Test Results Summary
-        if: ${{ !cancelled() }}
+        shell: bash
         run: |
-          echo "=== DRY RUN COMPLETE - TEST RESULTS SUMMARY ==="
-          echo ""
-          echo "Test Configuration:"
-          echo "   - Version: ${{ needs.generate-test-changelog.outputs.version }}"
-          echo "   - Platforms: ${{ github.event.inputs.platforms_to_test }}"
-          echo "   - Skip Notarization: ${{ github.event.inputs.skip_notarization }}"
-          echo "   - Skip Upload: ${{ github.event.inputs.skip_upload }}"
-          echo "   - Triggered by: @${{ github.actor }}"
-          echo ""
-          echo "Generated Test Artifacts:"
+          echo "## DRY RUN COMPLETE - TEST RESULTS SUMMARY" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Test Configuration:**" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ needs.generate-test-changelog.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms**: ${{ github.event.inputs.platforms_to_test }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Skip Notarization**: ${{ github.event.inputs.skip_notarization }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Skip Upload**: ${{ github.event.inputs.skip_upload }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Generated Test Artifacts:**" >> $GITHUB_STEP_SUMMARY
           if [ -d "./test-artifacts" ]; then
-            find ./test-artifacts -type f \( -name "*.exe" -o -name "*.pkg" -o -name "*.AppImage" -o -name "*.tar.gz" -o -name "*.zip" \) 2>/dev/null | while read file; do
-              size=$(du -h "$file" 2>/dev/null | cut -f1 || echo "unknown")
-              echo "   - $(basename "$file") ($size)"
-            done || echo "   - No artifacts found"
-          else
-            echo "   - No test artifacts directory found"
+            find ./test-artifacts -type f \( -name "*-Setup.exe" -o -name "*.pkg" -o -name "*.AppImage" -o -name "*.nupkg" -o -name "RELEASES" \) | while read file; do
+              size=$(du -h "$file" | cut -f1)
+              echo "   - \`$(basename "$file")\` ($size)" >> $GITHUB_STEP_SUMMARY
+            done
           fi
-          echo ""
-          echo "Build Status:"
+          echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ needs.test-build.result }}" = "success" ]; then
-            echo "   All test builds completed successfully"
-          elif [ "${{ needs.test-build.result }}" = "failure" ]; then
-            echo "   Some test builds failed"
+            echo "✅ **All test builds completed successfully.**" >> $GITHUB_STEP_SUMMARY
           else
-            echo "   Build status: ${{ needs.test-build.result }}"
+            echo "❌ **Some test builds failed.** Review logs for details." >> $GITHUB_STEP_SUMMARY
           fi
-          echo ""
-          echo "Next Steps:"
-          echo "   1. Review the test artifacts above"
-          echo "   2. Check the individual job logs for any issues"
-          echo "   3. If everything looks good, you can run the production workflow"
-          echo "   4. Remember to clean up any test releases if uploads were enabled"
-          echo ""
-          echo "IMPORTANT: This was a dry run - do not distribute these test builds!"
-          echo "=================================================="
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> [!WARNING]" >> $GITHUB_STEP_SUMMARY
+          > echo "> This was a dry run. Do not distribute these builds." >> $GITHUB_STEP_SUMMARY
