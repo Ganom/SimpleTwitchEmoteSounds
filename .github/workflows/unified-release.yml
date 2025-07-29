@@ -35,45 +35,24 @@ jobs:
             const tag = context.ref.replace('refs/tags/', '');
             
             // Get the previous tag
-            const tags = await github.rest.repos.listTags({
-              owner,
-              repo,
-              per_page: 100
-            });
-            
+            const tags = await github.rest.repos.listTags({ owner, repo, per_page: 100 });
             const currentTagIndex = tags.data.findIndex(t => t.name === tag);
             const previousTag = currentTagIndex < tags.data.length - 1 ? tags.data[currentTagIndex + 1].name : null;
             
             let changelogContent = `# Release ${tag}\n\n## What's Changed\n\n`;
             
             if (previousTag) {
-              // Get commits between tags
-              const comparison = await github.rest.repos.compareCommits({
-                owner,
-                repo,
-                base: previousTag,
-                head: tag
-              });
-            
-              // Categorize commits
-              const features = [];
-              const fixes = [];
-              const others = [];
+              const comparison = await github.rest.repos.compareCommits({ owner, repo, base: previousTag, head: tag });
+              const features = [], fixes = [], others = [];
               let ciChangesCount = 0;
             
               comparison.data.commits.forEach(commit => {
                 const message = commit.commit.message.split('\n')[0];
                 const author = commit.commit.author.name;
                 const login = commit.author?.login || author;
-            
-                // Clean up the commit message
                 const cleanMessage = message.replace(/^(feat|fix|docs|style|refactor|test|chore)(\([^)]+\))?:\s*/i, '');
             
-                // Check for CI-related commits
-                if (message.toLowerCase().match(/^(feat|fix|chore|ci)\(ci\):/i) ||
-                    message.toLowerCase().match(/^(ci|chore).*\b(ci|workflow|github|action|release|build|deploy|pipeline)\b/i) ||
-                    message.toLowerCase().includes('.github/workflows') ||
-                    message.toLowerCase().includes('ci:')) {
+                if (message.toLowerCase().match(/^(feat|fix|chore|ci)\(ci\):/i) || message.toLowerCase().match(/^(ci|chore).*\b(ci|workflow|github|action|release|build|deploy|pipeline)\b/i) || message.toLowerCase().includes('.github/workflows')) {
                   ciChangesCount++;
                 } else if (message.toLowerCase().match(/^(feat|add)/)) {
                   features.push(`- ${cleanMessage} by @${login}`);
@@ -84,42 +63,18 @@ jobs:
                 }
               });
             
-              if (features.length > 0) {
-                changelogContent += `### New Features\n\n`;
-                changelogContent += features.join('\n') + '\n\n';
-              }
-            
-              if (fixes.length > 0) {
-                changelogContent += `### Bug Fixes\n\n`;
-                changelogContent += fixes.join('\n') + '\n\n';
-              }
-            
-              if (ciChangesCount > 0) {
-                changelogContent += `### CI & Build Improvements\n\n`;
-                changelogContent += `- ${ciChangesCount} CI/build improvements and maintenance updates\n\n`;
-              }
-            
-              if (others.length > 0) {
-                changelogContent += `### Other Changes\n\n`;
-                changelogContent += others.join('\n') + '\n\n';
-              }
-            
-              changelogContent += `---\n\n`;
-              changelogContent += `[**Full Changelog**](https://github.com/${owner}/${repo}/compare/${previousTag}...${tag})\n`;
+              if (features.length > 0) changelogContent += `### New Features\n\n${features.join('\n')}\n\n`;
+              if (fixes.length > 0) changelogContent += `### Bug Fixes\n\n${fixes.join('\n')}\n\n`;
+              if (ciChangesCount > 0) changelogContent += `### CI & Build Improvements\n\n- ${ciChangesCount} CI/build improvements and maintenance updates\n\n`;
+              if (others.length > 0) changelogContent += `### Other Changes\n\n${others.join('\n')}\n\n`;
+              changelogContent += `---\n\n[**Full Changelog**](https://github.com/${owner}/${repo}/compare/${previousTag}...${tag})\n`;
             } else {
-              changelogContent += `Initial release of SimpleTwitchEmoteSounds ${tag}\n\n`;
-              changelogContent += `This is the first release of SimpleTwitchEmoteSounds. Welcome!\n`;
+              changelogContent += `Initial release of SimpleTwitchEmoteSounds ${tag}\n`;
             }
             
-            // Save changelog to file
             const fs = require('fs');
             fs.writeFileSync('CHANGELOG.md', changelogContent);
-            
-            // Set output for later use (GitHub Actions handles multiline strings natively)
             core.setOutput('changelog', changelogContent);
-            
-            console.log('Generated changelog:');
-            console.log(changelogContent);
 
       - name: Upload Changelog Artifact
         uses: actions/upload-artifact@v4
@@ -127,32 +82,27 @@ jobs:
           name: changelog
           path: CHANGELOG.md
 
-  # Build matrix for all platforms and architectures
   build:
     needs: generate-changelog
     runs-on: ${{ matrix.os }}
-    
     strategy:
       fail-fast: false
       matrix:
         include:
-          # Windows builds
           - os: windows-latest
             platform: windows
             arch: x64
             runtime: win-x64
             executable: SimpleTwitchEmoteSounds.exe
             icon_suffix: ico
-          
-          # macOS builds (ARM64 only)
+            
           - os: macos-latest
             platform: macos
             arch: arm64
             runtime: osx-arm64
             executable: SimpleTwitchEmoteSounds
             icon_suffix: icns
-
-          # Linux builds
+            
           - os: ubuntu-latest
             platform: linux
             arch: x64
@@ -192,24 +142,18 @@ jobs:
         shell: pwsh
         run: |
           $publishDir = "./publish-${{ matrix.arch }}"
-          Write-Host "Building SimpleTwitchEmoteSounds for ${{ matrix.platform }}..." -ForegroundColor Yellow
           dotnet publish SimpleTwitchEmoteSounds/SimpleTwitchEmoteSounds.csproj -c Release --self-contained -r ${{ matrix.runtime }} -o $publishDir /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishSingleFile=false
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "Application build failed!" -ForegroundColor Red
-              exit 1
-          }
+          if ($LASTEXITCODE -ne 0) { exit 1 }
 
       - name: Verify Build Structure
         shell: bash
         run: |
           publish_dir="./publish-${{ matrix.arch }}"
-          echo "=== Build Directory Structure ==="
-          ls -la "$publish_dir"
-          echo ""
           if [[ -f "$publish_dir/${{ matrix.executable }}" ]]; then
             echo "✅ Main executable found."
           else
-            echo "❌ ERROR: Main executable not found!"
+            echo "❌ ERROR: Main executable not found in '$publish_dir'!"
+            ls -la "$publish_dir"
             exit 1
           fi
 
@@ -217,9 +161,7 @@ jobs:
         run: dotnet tool install -g vpk
 
       - name: Download Existing Releases
-        run: |
-          sleep ${{ strategy.job-index }}
-          vpk download github --repoUrl https://github.com/Ganom/SimpleTwitchEmoteSounds --token ${{ secrets.STES_TOKEN }}
+        run: vpk download github --repoUrl https://github.com/Ganom/SimpleTwitchEmoteSounds --token ${{ secrets.STES_TOKEN }}
 
       - name: Create Velopack Release (Windows)
         if: matrix.platform == 'windows'
@@ -227,21 +169,8 @@ jobs:
         run: |
           $publishDir = "./publish-${{ matrix.arch }}"
           $iconPath = "./SimpleTwitchEmoteSounds/Assets/icon.${{ matrix.icon_suffix }}"
-          $vpkArgs = @(
-            "pack",
-            "--packId", "SimpleTwitchEmoteSounds",
-            "--packVersion", "${{ needs.generate-changelog.outputs.version }}",
-            "--packDir", $publishDir,
-            "--mainExe", "${{ matrix.executable }}",
-            "--packTitle", "SimpleTwitchEmoteSounds",
-            "--releaseNotes", "CHANGELOG.md"
-          )
-          if (Test-Path $iconPath) {
-              Write-Host "✅ Found icon at: $iconPath" -ForegroundColor Green
-            $vpkArgs += @("--icon", $iconPath)
-          } else {
-            Write-Host "⚠️ No icon file found at '$iconPath', proceeding without icon." -ForegroundColor Yellow
-          }
+          $vpkArgs = @("pack", "--packId", "SimpleTwitchEmoteSounds", "--packVersion", "${{ needs.generate-changelog.outputs.version }}", "--packDir", $publishDir, "--mainExe", "${{ matrix.executable }}", "--packTitle", "SimpleTwitchEmoteSounds", "--releaseNotes", "CHANGELOG.md")
+          if (Test-Path $iconPath) { $vpkArgs += @("--icon", $iconPath) }
           vpk @vpkArgs
 
       - name: Create Velopack Release (Unix)
@@ -250,39 +179,20 @@ jobs:
         run: |
           publish_dir="./publish-${{ matrix.arch }}"
           icon_path="./SimpleTwitchEmoteSounds/Assets/icon.${{ matrix.icon_suffix }}"
-          vpk_args=(
-              "pack"
-              "--packId" "SimpleTwitchEmoteSounds"
-              "--packVersion" "${{ needs.generate-changelog.outputs.version }}"
-              "--packDir" "$publish_dir"
-              "--mainExe" "${{ matrix.executable }}"
-              "--packTitle" "SimpleTwitchEmoteSounds"
-              "--releaseNotes" "CHANGELOG.md"
-              "--runtime" "${{ matrix.runtime }}"
-          )
-          if [[ -f "$icon_path" ]]; then
-              echo "✅ Found icon at: $icon_path"
-              vpk_args+=("--icon" "$icon_path")
-          else
-              echo "⚠️ No icon file found at '$icon_path', proceeding without icon."
-          fi
+          vpk_args=("pack" "--packId" "SimpleTwitchEmoteSounds" "--packVersion" "${{ needs.generate-changelog.outputs.version }}" "--packDir" "$publish_dir" "--mainExe" "${{ matrix.executable }}" "--packTitle" "SimpleTwitchEmoteSounds" "--releaseNotes" "CHANGELOG.md" "--runtime" "${{ matrix.runtime }}")
+          if [[ -f "$icon_path" ]]; then vpk_args+=("--icon" "$icon_path"); fi
+          
           if [[ "${{ matrix.platform }}" == "macos" ]]; then
-          APP_SIGNING_IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)".*/\1/' || echo "")
-          INSTALLER_SIGNING_IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep "Developer ID Installer" | head -1 | sed 's/.*"\(.*\)".*/\1/' || echo "")
-              if [[ -n "$APP_SIGNING_IDENTITY" && -n "$INSTALLER_SIGNING_IDENTITY" ]]; then
-                  echo "🔑 Using signing identities for macOS."
-                  vpk_args+=("--signAppIdentity" "$APP_SIGNING_IDENTITY" "--signInstallIdentity" "$INSTALLER_SIGNING_IDENTITY")
+            APP_SIGNING_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+            INSTALLER_SIGNING_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Installer" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+            if [[ -n "$APP_SIGNING_IDENTITY" && -n "$INSTALLER_SIGNING_IDENTITY" ]]; then
+                echo "🔑 Using signing identities for macOS."
+                vpk_args+=("--signAppIdentity" "$APP_SIGNING_IDENTITY" "--signInstallIdentity" "$INSTALLER_SIGNING_IDENTITY")
             else
-                  echo "Building without code signing (no certificates found)."
-          fi
+                echo "Building without code signing (no certificates found)."
+            fi
           fi
           vpk "${vpk_args[@]}"
-
-      - name: Verify Velopack Output
-        shell: bash
-        run: |
-          echo "=== Velopack Release Files ==="
-          ls -la ./Releases/
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
@@ -295,12 +205,10 @@ jobs:
 
       - name: Cleanup Keychain
         if: always() && matrix.platform == 'macos'
-        run: |
-          security delete-keychain temp.keychain 2>/dev/null || true
+        run: security delete-keychain temp.keychain || true
 
-  # Single release job that runs after all builds complete
   release:
-    needs: [ generate-changelog, build ]
+    needs: [generate-changelog, build]
     runs-on: ubuntu-latest
     steps:
       - name: Download All Build Artifacts
@@ -311,8 +219,6 @@ jobs:
       - name: Prepare Release Assets
         run: |
           mkdir -p ./release-assets
-          
-          # Define priority files in the desired order for user visibility
           priority_files=(
             "*win*-Setup.exe"
             "*osx*-Setup.pkg"
@@ -320,17 +226,12 @@ jobs:
             "*win*-Portable.zip"
             "*osx*-Portable.zip"
           )
-          
-          echo "=== Copying Priority Assets ==="
           for pattern in "${priority_files[@]}"; do
             find ./artifacts -type f -name "$pattern" -exec cp -v {} ./release-assets/ \;
           done
-          
-          echo "=== Copying Remaining Assets ==="
-          # Copy all other artifact files without overwriting the priority ones
+          # Copy all other artifact files without overwriting
           find ./artifacts -type f -exec cp -n -v {} ./release-assets/ \;
-          
-          echo "=== Final Release Assets (Sorted for Upload) ==="
+          echo "=== Final Release Assets ==="
           ls -la ./release-assets/
 
       - name: Create GitHub Release
